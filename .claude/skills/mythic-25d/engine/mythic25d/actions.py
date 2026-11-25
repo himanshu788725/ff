@@ -449,6 +449,37 @@ def a_silhouette(st, lt, a, rig, ctx):
         st.silhouette = a.get("on", True)
 
 
+def a_leap(st, lt, a, rig, ctx):
+    """Fish / dolphin leap out of the water: visible only during the arc."""
+    dur = a.get("dur", 0.9)
+    if 0 <= lt <= dur:
+        k = lt / dur
+        st.dy -= a.get("height", 10.0) * 4 * k * (1 - k)
+        st.x = a.get("_from", st.x) + a.get("dx", 0.05) * k * st.face
+        st.rot += (-50 + 100 * k)
+        st.alpha *= 1.0 if 0.06 < k < 0.94 else 0.0
+    else:
+        st.alpha = 0.0
+
+
+def a_soar(st, lt, a, rig, ctx):
+    """Bird of prey circling high above the battlefield (large slow ellipse)."""
+    dur = a.get("dur", 99)
+    if lt < 0 or lt > dur:
+        return
+    w = a.get("speed", 0.25)
+    cx, rx = a.get("cx", 0.5), a.get("rx", 0.3)
+    ph = lt * w + a.get("phase", 0.0)
+    st.x = cx + rx * math.cos(ph)
+    st.dy -= a.get("ry", 6.0) * math.sin(ph)
+    st.face = -1 if math.sin(ph) > 0 else 1
+    if rig.meta.get("kind") == "bird":
+        flap = math.sin(lt * 9) if (lt % 3.0) < 0.9 else 0.15
+        st.set("wing_f", -45 + 70 * flap, 1)
+        st.set("wing_b", -35 + 60 * flap, 1)
+        st.flying = True
+
+
 # ---------------------------------------------------------------- animal-only
 
 def a_graze(st, lt, a, rig, ctx):
@@ -488,7 +519,7 @@ ACTIONS = {
     "dance": a_dance, "laugh": a_laugh, "sad": a_sad, "appear": a_appear, "vanish": a_vanish, "hidden": a_hidden,
     "turn": a_turn, "grow": a_grow, "shrink": a_shrink, "move": a_move, "glide": a_move, "glow": a_glow,
     "spin": a_spin, "pose": a_pose, "silhouette": a_silhouette, "graze": a_graze, "rear": a_rear, "roar": a_roar,
-    "peck": a_peck, "enter": a_walk, "exit": a_walk,
+    "peck": a_peck, "enter": a_walk, "exit": a_walk, "leap": a_leap, "soar": a_soar,
 }
 
 ACTION_HELP = {
@@ -504,6 +535,7 @@ ACTION_HELP = {
     "grow": "virat roop; to(scale), dur", "shrink": "to, dur", "move": "glide to x; dy", "glow": "aura; amount",
     "spin": "spin held chakra; part, speed", "pose": "raw angles dict", "silhouette": "on/off shadow-puppet look",
     "graze": "animal head down", "rear": "horse rears up", "roar": "lion/tiger roar", "peck": "bird pecks",
+    "leap": "fish leaps out of water; height, dx", "soar": "bird circles in the sky; cx, rx, ry, speed",
 }
 
 

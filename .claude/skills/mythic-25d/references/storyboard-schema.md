@@ -56,11 +56,15 @@ shots: [...]
   duration: auto                # auto = voice length + lead + pad; or seconds (minimum)
   lead: 0.35                    # silence before first line (0.6 on shot 1)
   pad: 0.7                      # breathing room after the last line
-  transition: crossfade         # crossfade | dip | flash | cut   (into this shot)
-  trans_dur: 0.6
+  transition: crossfade         # crossfade | wipe | wipe_leaf | wipe_pillar | wipe_tree | wipe_cloud | dip | flash | cut
+  trans_dur: 0.6                # (wipes default 1.3)
   grade: swarna                 # override grade for this shot
   camera:
-    move: push_in               # static push_in pull_out pan_left pan_right tilt_up tilt_down drift close_up
+    move: push_in               # drift push_in pull_out pan_left pan_right truck_left truck_right crane_down crane_up
+                                # establish reveal push_to follow float tilt_up tilt_down close_up dolly_zoom static
+    on: hanuman                 # target cast id for establish/reveal/push_to/follow (or to frame any move)
+    frame: medium               # wide | full | medium | close | extreme
+    breathe: true               # subtle never-still camera like the reference
     from: 1.0                   # zoom at start (>=1)
     to: 1.12                    # zoom at end
     x: [0.5, 0.55]              # camera centre x (start, end) 0..1
@@ -76,7 +80,8 @@ shots: [...]
   ambience: wind                # override auto ambience bed (or false)
   cast: [...]
   props: [...]
-  fx: [dust, rays, "flash@2.4", "lightning@1.0", "shake@3.0", "divine_burst@0.5", "fade_out@6"]
+  fx: [dust, rays, "flash@2.4", "lightning@1.0", "shake@3.0", "divine_burst@0.5", "dim@4", "lights_up@7", "fade_out@6"]
+  life: [{who: deer, mode: run_across, depth: 0.6}]   # extra background creatures; `life: false` = none
   sfx: [{name: conch, at: 0.3, vol: -6}, {name: war_drums, at: 1, vol: -14, dur: 5}]
   shloka: {...}                 # verse card, see below
   light: {spot: [0.5, 0.42], spot_color: "#ffcf8a", vignette: 0.7, rays: 0.5, haze_k: 0.2, amb: 0.9}

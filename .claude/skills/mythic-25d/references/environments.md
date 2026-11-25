@@ -34,9 +34,40 @@ Times: dawn · day · dusk · night · fire · divine · storm · cosmic · snow
 | `stage` | night, day, fire, divine | कठपुतली मंच (theatre stage) |
 | `shadow_screen` | night, fire, dusk, cosmic | छाया-नाट्य परदा (shadow theatre) |
 
+## Living background — automatic ambient creatures per locale
+
+| locale | creatures (mode, when) |
+|---|---|
+| `forest_banana` | deer (run_across, day/dawn/dusk), butterfly (hover, day/dawn), golden_deer (graze, dawn), peacock (walk_across, day) |
+| `forest_deep` | deer (graze, day/dusk), tiger (walk_across, dusk/night), wolf (run_across, night), owl (perch, night), monkey_animal (run_across, day) |
+| `palace_garden` | peacock (walk_across, day/dawn/dusk), hamsa (glide, day/dawn/dusk), butterfly (hover, day/dawn), parrot (fly_across, day) |
+| `ashram` | cow (graze, dawn/day/dusk), deer (graze, dawn/day), peacock (walk_across, day), parrot (fly_across, dawn/day) |
+| `vrindavan` | cow (graze), calf (walk_across, day/dawn), peacock (walk_across, day/dawn/dusk), parrot (fly_across, day), butterfly (hover, day) |
+| `village` | cow (walk_across, day/dawn), dog (run_across, day), hen (peck, day/dawn), rooster (peck, dawn) |
+| `kurukshetra` | kaurava_soldier (march, dawn/day/dusk), chariot_horse (run_across, dawn/day/dusk), vulture (circle, dusk/day/fire) |
+| `war_camp` | horse (graze), dog (walk_across, dusk/dawn) |
+| `ghats` | hamsa (glide, dawn/day/dusk), matsya_fish (leap, day/dawn), crane (perch, dawn/day) |
+| `lotus_lake` | hamsa (glide), fish (leap, day/dawn/divine), kingfisher (fly_across, day), butterfly (hover, day/divine) |
+| `kshirsagar` | fish (leap, day/divine), hamsa (glide, day/divine) |
+| `ocean_shore` | fish (leap, day/dawn/dusk), kite (circle, day/dusk) |
+| `dwarka` | kite (circle, day/dusk) |
+| `mountain_pass` | eagle (circle, day/dusk), goat (graze, day) |
+| `kailash` | eagle (circle, snow/dawn) |
+| `plain` | deer (run_across, day/dawn), jackal (walk_across, dusk), camel (walk_across, day) |
+| `shmashan` | jackal (walk_across), crow (peck), bat (hover, night) |
+| `cave` | bat (hover) |
+| `swarga` | hamsa (fly_across), butterfly (hover, divine/day) |
+| `palace_court` | pigeon (fly_across, day) |
+| `temple` | pigeon (fly_across, day) |
+| `lanka` | lanka_soldier (march, day/dusk/night) |
+| `patala` | cobra (graze) |
+
+All natural sets also get wind-animated trees/grass/flowers, drifting clouds and foreground foliage.
+Override per shot with `life:` (list) or `life: false`.
+
 ## Props (`props:` in a shot)
 
-`cloud` (hangs), `sun` (hangs), `moon` (hangs), `star` (hangs), `tree`, `bush`, `lotus`, `grass`, `rock`, `mountains`, `palace`, `pillar`, `temple`, `fort`, `city`, `hut`, `tent`, `flagpole`, `deepstambh`, `diya`, `yagya_kund`, `throne`, `chhatra` (hangs), `chariot`, `boat`, `pots`, `cushion`, `toran`, `bunting`, `waterfall`, `screen`, `cave`, `steps`, `setu`, `sanjeevani_mountain`
+`cloud` (hangs), `sun` (hangs), `moon` (hangs), `star` (hangs), `tree`, `bush`, `lotus`, `grass`, `rock`, `flowers`, `reeds`, `leaf_cluster`, `fg_pillar`, `mountains`, `palace`, `pillar`, `temple`, `fort`, `city`, `hut`, `tent`, `flagpole`, `deepstambh`, `diya`, `yagya_kund`, `throne`, `chhatra` (hangs), `chariot`, `boat`, `pots`, `cushion`, `toran`, `bunting`, `waterfall`, `screen`, `cave`, `steps`, `setu`, `sanjeevani_mountain`
 
 ## Actions (`actions:` on a cast member)
 
@@ -82,6 +113,8 @@ Times: dawn · day · dusk · night · fire · divine · storm · cosmic · snow
 | `rear` | horse rears up |
 | `roar` | lion/tiger roar |
 | `peck` | bird pecks |
+| `leap` | fish leaps out of water; height, dx |
+| `soar` | bird circles in the sky; cx, rx, ry, speed |
 
 ## Music moods
 

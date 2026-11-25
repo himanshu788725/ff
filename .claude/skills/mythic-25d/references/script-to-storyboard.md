@@ -14,8 +14,9 @@ moves, the camera breathes, and the scenery changes with the story's place and t
 
 | beat type | env & camera | cast & acting |
 |---|---|---|
-| establishing a place | wide env, `drift` or `pan_*`, 4–6 s, maybe no cast | birds/animals, a hanging sun/moon |
-| narration about a character | `push_in` toward them | idle + one gesture (`bless`, `point`, `raise`) |
+| establishing a place | wide env, `crane_down` or `truck_right`, 4–6 s, maybe no cast | the env's own animals/birds animate |
+| narration about a character | `establish` / `push_to` with `on:` them | idle + one gesture (`bless`, `point`, `raise`) |
+| someone walks / flies somewhere | `follow` with `on:` the walker, `frame: full` | `walk`/`run`/`fly` with `to:` |
 | dialogue | two characters facing each other, x≈0.3 & 0.68; `drift`/`close_up` | speaker auto-talks; listener reacts (`namaste`, `angry`, `laugh`) |
 | travel / arrival | `pan_right` with the walk direction | `walk` from off-stage (x -0.2 → 0.3) |
 | battle beat | kurukshetra / war_camp / lanka_fire, `push_in` + `shake@` | `strike`, `shoot`, `fight`, `fall`; horses `rear` |
@@ -26,7 +27,12 @@ moves, the camera breathes, and the scenery changes with the story's place and t
 
 Rules:
 - Shot length follows the voice automatically (`duration: auto`). Split narration over ~22 words into 2 shots.
-- Alternate camera moves; avoid two identical moves back to back; use `close_up` for emotional lines.
+- Alternate camera moves; avoid two identical moves back to back; use `push_to` for emotional lines.
+- New place → `transition: wipe` (foreground leaves/pillar sweep, like the reference); same place, new beat →
+  `crossfade`; time jump → `dip`; divine/battle impact → `flash`.
+- Dramatic or remembered beats: `fx: ["dim@1"]` turns the puppets into silhouettes.
+- The background is alive automatically; add story-relevant creatures with `life:` (e.g. the golden deer
+  running for Maricha, swans for Saraswati, vultures over the battlefield).
 - Change the environment's time with the story (dawn → day → dusk → night) — it changes palette, light,
   hanging props and grade automatically.
 - Put the camera's interest where the action is: `camera.x: [0.6, 0.58]` for a close-up on a character at 0.64.

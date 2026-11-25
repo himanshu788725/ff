@@ -41,11 +41,27 @@ def load_board(path) -> dict:
         raise ValueError("storyboard must be a mapping with a `shots:` list")
     if board.get("characters"):
         register(board["characters"])
+    normalize(board)
+    return board
+
+
+def normalize(board):
+    """YAML 1.1 reads the key `on:` as boolean True — map it (and `target:`) back to camera['on']."""
+    for s in board.get("shots", []) or []:
+        cam = s.get("camera")
+        if isinstance(cam, dict):
+            if True in cam:
+                cam["on"] = cam.pop(True)
+            if "target" in cam and "on" not in cam:
+                cam["on"] = cam.pop("target")
+            if cam.get("follow") and isinstance(cam["follow"], str) and "on" not in cam:
+                cam["on"] = cam["follow"]
     return board
 
 
 def validate(board) -> list:
     """Return a list of human-readable problems (empty = OK)."""
+    normalize(board)
     probs = []
     ids = set()
     env_ids = {e[0] for e in list_envs()}
@@ -83,6 +99,25 @@ def validate(board) -> list:
             w = ln.get("who")
             if w and w != "narrator" and w not in cast_ids:
                 probs.append(f"{sid}: speaker '{w}' is not in this shot's cast (talk animation will be skipped)")
+        cam = s.get("camera") or {}
+        from .render import CAM_PRESETS, FRAMES
+        if cam.get("move") and cam["move"] not in CAM_PRESETS:
+            probs.append(f"{sid}: unknown camera move '{cam['move']}' (use: {', '.join(CAM_PRESETS)})")
+        if cam.get("frame") and cam["frame"] not in FRAMES:
+            probs.append(f"{sid}: unknown camera frame '{cam['frame']}' (use: {', '.join(FRAMES)})")
+        if cam.get("on") and cam["on"] not in cast_ids:
+            probs.append(f"{sid}: camera.on '{cam['on']}' is not a cast id in this shot")
+        if cam.get("move") in ("establish", "reveal", "push_to", "follow") and not cam.get("on"):
+            probs.append(f"{sid}: camera move '{cam['move']}' needs `on: <cast id>`")
+        tr = s.get("transition")
+        if tr and tr not in ("crossfade", "dip", "dip_black", "flash", "cut", "wipe", "wipe_leaf", "wipe_pillar", "wipe_tree",
+                             "wipe_cloud"):
+            probs.append(f"{sid}: unknown transition '{tr}'")
+        for lf in (s.get("life") or []) if s.get("life") is not False else []:
+            try:
+                get_entity(lf.get("who"))
+            except KeyError as ex:
+                probs.append(f"{sid}: life: {ex}")
         if not s.get("narration") and not s.get("lines") and not s.get("duration"):
             probs.append(f"{sid}: no narration/lines and no duration -> defaults to 3s")
     return probs

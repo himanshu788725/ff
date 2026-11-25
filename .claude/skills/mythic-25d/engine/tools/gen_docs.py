@@ -6,7 +6,7 @@ from pathlib import Path
 ENGINE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ENGINE))
 from mythic25d.catalog import all_entities  # noqa: E402
-from mythic25d.envs import LOCALES, list_envs  # noqa: E402
+from mythic25d.envs import LIFE, LOCALES, list_envs  # noqa: E402
 from mythic25d.props import PROPS, HANGING  # noqa: E402
 from mythic25d.actions import ACTION_HELP  # noqa: E402
 from mythic25d.music import MOODS, RAGAS  # noqa: E402
@@ -36,6 +36,13 @@ L = ["# Environments, props, actions, moods (auto-generated)", "",
      "| locale | times | what it is |", "|---|---|---|"]
 for loc, (_, times, desc) in LOCALES.items():
     L.append(f"| `{loc}` | {', '.join(times)} | {desc} |")
+L += ["", "## Living background — automatic ambient creatures per locale", "",
+      "| locale | creatures (mode, when) |", "|---|---|"]
+for loc, items in LIFE.items():
+    if items:
+        L.append(f"| `{loc}` | " + ", ".join(f"{w} ({m}{', ' + '/'.join(t) if t else ''})" for w, m, kw, t in items) + " |")
+L += ["", "All natural sets also get wind-animated trees/grass/flowers, drifting clouds and foreground foliage.",
+      "Override per shot with `life:` (list) or `life: false`."]
 L += ["", "## Props (`props:` in a shot)", "",
       ", ".join(f"`{k}`" + (" (hangs)" if k in HANGING else "") for k in PROPS), "",
       "## Actions (`actions:` on a cast member)", "", "| action | params |", "|---|---|"]

@@ -235,6 +235,57 @@ def grass(p, color="#5a7a34", w=10.0, seed=0):
     return (-w / 2 - 2, -5, w / 2 + 2, 0.5)
 
 
+def flowers(p, color="vermilion", leaf="#4f7d3a", w=6.0, seed=0, n=5):
+    """Small clump of wild flowers on stems (sways in the wind)."""
+    r = rng("flowers", seed)
+    for k in range(n):
+        x = r.uniform(-w / 2, w / 2)
+        hh = r.uniform(2.6, 5.2)
+        p.line([(x * 0.3, 0), (x, -hh)], leaf, 0.22, smooth=False)
+        p.poly([(x * 0.6, -hh * 0.4), (x * 0.6 + 1.2, -hh * 0.6), (x * 0.6 + 0.2, -hh * 0.35)], fill=leaf)
+        c = color if k % 2 else r.choice(["#f2c94a", "#f6efdf", "#e98aa0", color])
+        for a in range(0, 360, 72):
+            p.circle(x + math.cos(math.radians(a)) * 0.55, -hh + math.sin(math.radians(a)) * 0.55, 0.45, fill=c)
+        p.circle(x, -hh, 0.32, fill="#f2c94a" if c != "#f2c94a" else "vermilion")
+    return (-w / 2 - 2, -7, w / 2 + 2, 0.5)
+
+
+def reeds(p, color="#6a8a3a", w=8.0, seed=0):
+    r = rng("reeds", seed)
+    for k in range(9):
+        x = r.uniform(-w / 2, w / 2)
+        hh = r.uniform(5, 9)
+        p.poly([(x - 0.35, 0), (x + r.uniform(-1.5, 1.5), -hh), (x + 0.35, 0)], fill=color if k % 2 else shade(color, -0.15))
+        if k % 3 == 0:
+            tx = x + r.uniform(-0.6, 0.6)
+            p.ellipse(tx, -hh * 0.85, 0.45, 1.3, fill="#7a4a2a")
+    return (-w / 2 - 2, -10, w / 2 + 2, 0.5)
+
+
+def leaf_cluster(p, color="#1e2a18", w=60.0, seed=0):
+    """Huge dark foreground banana leaves — used for foreground wipes and framing."""
+    r = rng("leafc", seed)
+    for k in range(7):
+        a = -90 + (k - 3) * 24 + r.uniform(-8, 8)
+        L = w * r.uniform(0.45, 0.62)
+        tip = (math.cos(math.radians(a)) * L, math.sin(math.radians(a)) * L)
+        mid = (tip[0] / 2, tip[1] / 2)
+        nx, ny = -tip[1] / L, tip[0] / L
+        pts = [(0, 0), (mid[0] + nx * L * 0.13, mid[1] + ny * L * 0.13), tip, (mid[0] - nx * L * 0.12, mid[1] - ny * L * 0.12)]
+        p.poly(pts, fill=color if k % 2 else shade(color, 0.08), smooth=True, n=8)
+        p.line([(0, 0), mid, tip], shade(color, 0.2), 0.6, smooth=True)
+    p.poly(limb((0, 0), (0, w * 0.6), w * 0.08, w * 0.06), fill=shade(color, -0.1))
+    return (-w * 0.65, -w * 0.66, w * 0.65, w * 0.62)
+
+
+def fg_pillar(p, color="#1a120c", h=120.0):
+    """Dark foreground pillar / post that sweeps past the lens."""
+    p.poly([(-7, 10), (7, 10), (6, -h), (-6, -h)], fill=color)
+    for y in (-h * 0.2, -h * 0.55, -h * 0.85):
+        p.poly([(-8.5, y - 2), (8.5, y - 2), (8.5, y + 2), (-8.5, y + 2)], fill=shade(color, 0.1))
+    return (-10, -h - 2, 10, 12)
+
+
 def rock(p, color="#7a6e62", w=16.0, h=7.0, seed=0):
     r = rng("rock", seed)
     pts = [(-w / 2, 0), (-w * 0.45, -h * 0.6), (-w * 0.2, -h), (w * 0.15, -h * 0.9), (w * 0.42, -h * 0.55), (w / 2, 0)]
@@ -648,7 +699,8 @@ def mount_meru(p, color="#8a6a4a", h=50.0):
 
 PROPS = {
     "cloud": cloud, "sun": sun, "moon": moon, "star": star, "tree": tree, "bush": bush, "lotus": lotus, "grass": grass,
-    "rock": rock, "mountains": mountains, "palace": palace, "pillar": pillar, "temple": temple, "fort": fort,
+    "rock": rock, "flowers": flowers, "reeds": reeds, "leaf_cluster": leaf_cluster, "fg_pillar": fg_pillar,
+    "mountains": mountains, "palace": palace, "pillar": pillar, "temple": temple, "fort": fort,
     "city": city, "hut": hut, "tent": tent, "flagpole": flagpole, "deepstambh": deepstambh, "diya": diya_prop,
     "yagya_kund": yagya_kund, "throne": throne, "chhatra": chhatra_canopy, "chariot": chariot, "boat": boat,
     "pots": pots, "cushion": cushion, "toran": toran, "bunting": bunting, "waterfall": waterfall, "screen": screen,

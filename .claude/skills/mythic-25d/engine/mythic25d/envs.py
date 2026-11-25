@@ -67,6 +67,9 @@ class Env:
     light: dict = field(default_factory=dict)
     ground: float = GROUND
     stage_floor: str = "earth"
+    anim: list = field(default_factory=list)      # animated props: sprite, layer, x, y, kind, amp, freq, phase, order
+    life: list = field(default_factory=list)      # ambient background creatures (deer running, swans gliding ...)
+    drift: list = field(default_factory=list)     # sky clouds drifting across
 
 
 # =========================================================================== layer canvas
@@ -117,14 +120,75 @@ class B:
         self.floor_color = "#8a6a4a"
         self.ground = ground_line(W, H)
         self.light_over = {}
+        self.anim, self.life, self.drift = [], [], []
 
-    def prop(self, layer, name, x, y=None, s=1.0, fog=None, dark=0.0, flip=False, **params):
+    AUTO_ANIM = {"tree": "sway", "bush": "sway_fast", "grass": "sway_fast", "flowers": "sway_fast", "reeds": "sway_fast",
+                 "lotus": "bob", "flagpole": "flutter", "leaf_cluster": "sway", "chhatra": "sway"}
+
+    def prop(self, layer, name, x, y=None, s=1.0, fog=None, dark=0.0, flip=False, anim="auto", **params):
+        """Place a prop. Trees/grass/flowers/flags/lotus are kept as separate animated sprites
+        (they sway in the wind); everything else is baked into the layer."""
         y = self.ground if y is None else y
         spr = build_prop(name, self.ppu * s, **params)
         fogd = {"sky": 0.0, "far": 0.42, "mid": 0.2, "set": 0.06, "ground": 0.0, "front": 0.0}
         f = fogd.get(layer, 0) if fog is None else fog
+        kind = self.AUTO_ANIM.get(name) if anim == "auto" else anim
+        if kind:
+            if f > 0:
+                spr = spr.tinted(self.T["haze"], f)
+            if dark > 0:
+                spr = spr.tinted("#140c08", dark)
+            if flip:
+                spr = spr.flipped()
+            if layer in ("far", "front"):
+                rad = max(1, self.H / 900) if layer == "far" else max(2, self.H / 280)
+                spr = Sprite(spr.img.filter(ImageFilter.GaussianBlur(rad)), spr.px, spr.py)
+            depth_amp = {"sky": 0.3, "far": 0.35, "mid": 0.65, "set": 1.0, "ground": 1.0, "front": 1.5}.get(layer, 1.0)
+            base_amp = {"sway": 1.1, "sway_fast": 3.2, "bob": 0.0035, "flutter": 0.12}.get(kind, 1.0)
+            self.anim.append(dict(sprite=spr, layer=layer, x=x, y=y, kind=kind,
+                                  amp=base_amp * (depth_amp if kind.startswith("sway") else 1.0) * self.r.uniform(0.75, 1.25),
+                                  freq=self.r.uniform(0.45, 0.75) * (2.2 if kind in ("sway_fast", "flutter") else 1.0),
+                                  phase=self.r.uniform(0, 6.28),
+                                  order="under" if layer in ("far", "mid", "set") else "over"))
+            return spr
         self.L[layer].put(spr, x, y, fog=f, fog_color=self.T["haze"], dark=dark, flip=flip)
         return spr
+
+    def creature(self, who, mode="graze", depth=0.7, **kw):
+        """Ambient background life: modes run_across walk_across graze glide fly_across hover leap perch."""
+        self.life.append(dict(who=who, mode=mode, depth=depth, **kw))
+
+    def flora(self, density=1.0):
+        """Scatter swaying grass tufts & wild flowers along the stage floor + dark foreground clumps."""
+        kinds = ["grass", "grass", "flowers", "grass", "flowers", "reeds"] if self.floor in ("grass", "earth") else ["grass"]
+        n = int(9 * density)
+        for k in range(n):
+            x = -0.08 + (k + self.r.uniform(0.1, 0.9)) * 1.16 / n
+            y = self.ground + self.r.uniform(0.012, 0.11)
+            nm = self.r.choice(kinds)
+            params = {"seed": k}
+            if nm == "flowers":
+                params["color"] = self.r.choice(["vermilion", "#e98aa0", "#f2c94a", "#f6efdf", "saffron"])
+            if nm == "grass" and self.floor == "sand":
+                params["color"] = "#8a8a44"
+            self.prop("ground", nm, x, y, s=self.r.uniform(0.7, 1.2), **params)
+        for side in (-0.04, 1.04):
+            if self.r.random() < 0.8:
+                self.prop("front", "grass", side + self.r.uniform(-0.03, 0.03), 1.02, s=self.r.uniform(2.6, 3.4), dark=0.55,
+                          seed=int(side * 10) + 3)
+
+    def drift_cloud(self, n=2, wind=False):
+        col = {"night": "#3a3e58", "fire": "#4a2018", "storm": "#4a4e54", "dusk": "#b8705a", "dawn": "#d8b0a4",
+               "cosmic": "#3a2e6a", "divine": "#f8eed6"}.get(self.T.get("_name"), "#e8dcc4")
+        for i in range(n):
+            spr = build_prop("cloud", self.ppu * self.r.uniform(0.7, 1.1), color=col, kind="puffy", seed=40 + i)
+            spr = spr.tinted(self.T["haze"], 0.35).with_alpha(0.8)
+            self.drift.append(dict(sprite=spr, x=self.r.uniform(-0.1, 1.1), y=self.r.uniform(0.06, 0.24),
+                                   speed=self.r.uniform(0.004, 0.009) * self.r.choice((-1, 1)), parallax=0.2))
+        if wind:
+            spr = build_prop("cloud", self.ppu * 1.0, color="#efe6d0", kind="curl", seed=7)
+            self.drift.append(dict(sprite=spr, x=self.r.uniform(0, 1), y=self.r.uniform(0.15, 0.3), speed=0.045,
+                                   parallax=0.6, curl=True))
 
     def hang(self, name, x, y, s=1.0, string=None, parallax=0.85, **params):
         spr = build_prop(name, self.ppu * s, **params)
@@ -651,6 +715,57 @@ LOCALES = {
 }
 
 
+# ambient life per locale: (who, mode, kwargs, times-or-None)
+LIFE = {
+    "forest_banana": [("deer", "run_across", dict(depth=0.62, period=11, speed=0.32), ("day", "dawn", "dusk")),
+                      ("butterfly", "hover", dict(depth=0.95, y=0.6), ("day", "dawn")),
+                      ("golden_deer", "graze", dict(depth=0.58, x=0.84), ("dawn",)),
+                      ("peacock", "walk_across", dict(depth=0.72, period=16, speed=0.06), ("day",))],
+    "forest_deep": [("deer", "graze", dict(depth=0.6, x=0.18), ("day", "dusk")), ("tiger", "walk_across", dict(depth=0.6, period=18, speed=0.07), ("dusk", "night")),
+                    ("wolf", "run_across", dict(depth=0.6, period=13, speed=0.25), ("night",)), ("owl", "perch", dict(depth=0.7, x=0.2, y=0.5), ("night",)),
+                    ("monkey_animal", "run_across", dict(depth=0.66, period=12, speed=0.22), ("day",))],
+    "palace_garden": [("peacock", "walk_across", dict(depth=0.7, period=15, speed=0.06), ("day", "dawn", "dusk")),
+                      ("hamsa", "glide", dict(depth=0.8, speed=0.025), ("day", "dawn", "dusk")),
+                      ("butterfly", "hover", dict(depth=0.95, y=0.62), ("day", "dawn")), ("parrot", "fly_across", dict(depth=0.8, period=9, speed=0.2), ("day",))],
+    "ashram": [("cow", "graze", dict(depth=0.66, x=0.14), ("dawn", "day", "dusk")), ("deer", "graze", dict(depth=0.6, x=0.9), ("dawn", "day")),
+               ("peacock", "walk_across", dict(depth=0.75, period=18, speed=0.05), ("day",)), ("parrot", "fly_across", dict(depth=0.8, period=10, speed=0.2), ("dawn", "day"))],
+    "vrindavan": [("cow", "graze", dict(depth=0.64, x=0.2), None), ("calf", "walk_across", dict(depth=0.66, period=20, speed=0.05), ("day", "dawn")),
+                  ("peacock", "walk_across", dict(depth=0.72, period=14, speed=0.06), ("day", "dawn", "dusk")),
+                  ("parrot", "fly_across", dict(depth=0.8, period=8, speed=0.22), ("day",)), ("butterfly", "hover", dict(depth=0.95, y=0.6), ("day",))],
+    "village": [("cow", "walk_across", dict(depth=0.64, period=22, speed=0.05), ("day", "dawn")), ("dog", "run_across", dict(depth=0.75, period=14, speed=0.2), ("day",)),
+                ("hen", "peck", dict(depth=0.85, x=0.86), ("day", "dawn")), ("rooster", "peck", dict(depth=0.85, x=0.78), ("dawn",))],
+    "kurukshetra": [("kaurava_soldier", "march", dict(depth=0.55, period=9, speed=0.05, n=3), ("dawn", "day", "dusk")),
+                    ("chariot_horse", "run_across", dict(depth=0.52, period=10, speed=0.3), ("dawn", "day", "dusk")),
+                    ("vulture", "circle", dict(depth=0.6, y=0.22), ("dusk", "day", "fire"))],
+    "war_camp": [("horse", "graze", dict(depth=0.62, x=0.12), None), ("dog", "walk_across", dict(depth=0.7, period=20, speed=0.06), ("dusk", "dawn"))],
+    "ghats": [("hamsa", "glide", dict(depth=0.82, speed=0.02), ("dawn", "day", "dusk")), ("matsya_fish", "leap", dict(depth=0.85, period=6), ("day", "dawn")),
+              ("crane", "perch", dict(depth=0.78, x=0.9), ("dawn", "day"))],
+    "lotus_lake": [("hamsa", "glide", dict(depth=0.8, speed=0.022), None), ("fish", "leap", dict(depth=0.85, period=5), ("day", "dawn", "divine")),
+                   ("kingfisher", "fly_across", dict(depth=0.85, period=9, speed=0.25), ("day",)), ("butterfly", "hover", dict(depth=0.95, y=0.55), ("day", "divine"))],
+    "kshirsagar": [("fish", "leap", dict(depth=0.82, period=5.5), ("day", "divine")), ("hamsa", "glide", dict(depth=0.8, speed=0.02), ("day", "divine"))],
+    "ocean_shore": [("fish", "leap", dict(depth=0.7, period=6, y=0.73), ("day", "dawn", "dusk")), ("kite", "circle", dict(depth=0.6, y=0.2), ("day", "dusk"))],
+    "dwarka": [("kite", "circle", dict(depth=0.6, y=0.2), ("day", "dusk"))],
+    "mountain_pass": [("eagle", "circle", dict(depth=0.6, y=0.18), ("day", "dusk")), ("goat", "graze", dict(depth=0.66, x=0.2), ("day",))],
+    "kailash": [("eagle", "circle", dict(depth=0.6, y=0.18), ("snow", "dawn"))],
+    "plain": [("deer", "run_across", dict(depth=0.6, period=12, speed=0.3), ("day", "dawn")), ("jackal", "walk_across", dict(depth=0.62, period=16, speed=0.07), ("dusk",)),
+              ("camel", "walk_across", dict(depth=0.55, period=24, speed=0.03), ("day",))],
+    "shmashan": [("jackal", "walk_across", dict(depth=0.62, period=15, speed=0.06), None), ("crow", "peck", dict(depth=0.85, x=0.82), None),
+                 ("bat", "hover", dict(depth=0.8, y=0.3), ("night",))],
+    "cave": [("bat", "hover", dict(depth=0.8, y=0.3), None)],
+    "swarga": [("hamsa", "fly_across", dict(depth=0.75, period=9, speed=0.12), None), ("butterfly", "hover", dict(depth=0.95, y=0.5), ("divine", "day"))],
+    "palace_court": [("pigeon", "fly_across", dict(depth=0.7, period=13, speed=0.18), ("day",))],
+    "temple": [("pigeon", "fly_across", dict(depth=0.7, period=14, speed=0.18), ("day",))],
+    "lanka": [("lanka_soldier", "march", dict(depth=0.5, period=10, speed=0.04, n=2, y=0.62), ("day", "dusk", "night"))],
+    "patala": [("cobra", "graze", dict(depth=0.7, x=0.15), None)],
+    "yagya_shala": [], "cosmic": [], "stage": [], "shadow_screen": [],
+}
+
+FLORA = {"forest_banana": 1.2, "forest_deep": 1.0, "palace_garden": 1.0, "ashram": 1.1, "vrindavan": 1.3, "village": 0.8,
+         "mountain_pass": 0.5, "plain": 0.9, "lotus_lake": 0.0, "kurukshetra": 0.4, "war_camp": 0.4, "shmashan": 0.4,
+         "kailash": 0.0}
+WIND = {"forest_banana", "palace_garden", "vrindavan", "plain", "ashram", "village", "mountain_pass", "kurukshetra", "lotus_lake"}
+
+
 def list_envs():
     out = []
     for loc, (_, times, desc) in LOCALES.items():
@@ -686,6 +801,14 @@ def build_env(env_id, W, H, seed=0, use_cache=True, overrides=None) -> Env:
         T.update({k: v for k, v in overrides.items() if k in T})
     b = B(W, H, T, (env_id, seed))
     LOCALES[loc][0](b)
+    # living background: flora, drifting clouds, ambient creatures
+    if FLORA.get(loc, 0) > 0 and b.floor in ("grass", "earth", "sand", "battle", "dark", "stone"):
+        b.flora(FLORA[loc])
+    if t not in ("cosmic",) and loc not in ("stage", "cave", "temple", "palace_court", "yagya_shala", "patala", "shadow_screen"):
+        b.drift_cloud(2 if t != "night" else 1, wind=(loc in WIND and t in ("day", "dawn", "dusk")))
+    for who, mode, kw, times in LIFE.get(loc, []):
+        if times is None or t in times:
+            b.creature(who, mode, **kw)
     # depth blur: far layers softer, foreground soft (theatrical depth of field)
     layers = []
     for name, par in LAYERS:
@@ -694,12 +817,13 @@ def build_env(env_id, W, H, seed=0, use_cache=True, overrides=None) -> Env:
             im = im.filter(ImageFilter.GaussianBlur(max(1, H / 900)))
         elif name == "front":
             im = im.filter(ImageFilter.GaussianBlur(max(2, H / 280)))
-        if im.getbbox():
-            layers.append((name, par, im))
+        # keep every layer slot (even if empty): animated props, life & hanging props hook onto them
+        layers.append((name, par, im if im.getbbox() else None))
     light = dict(vignette=T["vign"], haze=T["haze"], light=T["light"], amb=T["amb"], rays=T["rays"],
                  particles=T["particles"], spot=(0.5, 0.42), spot_color=T["light"], time=t)
     light.update(b.light_over)
-    env = Env(env_id, W, H, layers, b.hanging, b.flames, b.water, b.birds, light, b.ground, b.floor)
+    env = Env(env_id, W, H, layers, b.hanging, b.flames, b.water, b.birds, light, b.ground, b.floor,
+              anim=b.anim, life=b.life, drift=b.drift)
     try:
         cp.parent.mkdir(parents=True, exist_ok=True)
         with open(cp, "wb") as f:

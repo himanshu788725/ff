@@ -37,6 +37,7 @@ CHAR_HEIGHT = 0.56  # rig unit -> stage unit factor (100 rig units ~ 56% of a 16
 # =========================================================================== camera
 
 CAM_PRESETS = {
+    # name:          zoom (start, end)   x (start, end)   y (start, end)
     "static": dict(z=(1.04, 1.04), x=(0.5, 0.5), y=(0.5, 0.5)),
     "push_in": dict(z=(1.0, 1.12), x=(0.5, 0.5), y=(0.5, 0.5)),
     "pull_out": dict(z=(1.14, 1.0), x=(0.5, 0.5), y=(0.5, 0.5)),
@@ -46,21 +47,48 @@ CAM_PRESETS = {
     "tilt_down": dict(z=(1.12, 1.12), x=(0.5, 0.5), y=(0.45, 0.58)),
     "drift": dict(z=(1.04, 1.09), x=(0.49, 0.52), y=(0.5, 0.49)),
     "close_up": dict(z=(1.35, 1.42), x=(0.5, 0.5), y=(0.44, 0.44)),
+    # reference-style 2.5D moves (strong parallax between layers)
+    "truck_right": dict(z=(1.14, 1.14), x=(0.36, 0.64), y=(0.5, 0.5)),
+    "truck_left": dict(z=(1.14, 1.14), x=(0.64, 0.36), y=(0.5, 0.5)),
+    "crane_down": dict(z=(1.2, 1.12), x=(0.5, 0.5), y=(0.3, 0.52)),
+    "crane_up": dict(z=(1.12, 1.2), x=(0.5, 0.5), y=(0.52, 0.3)),
+    "establish": dict(z=(1.0, 1.3), x=(0.5, None), y=(0.5, None)),      # wide set -> push onto `on`
+    "reveal": dict(z=(1.42, 1.0), x=(None, 0.5), y=(None, 0.5)),        # tight on `on` -> pull back to the set
+    "push_to": dict(z=(1.08, 1.55), x=(0.5, None), y=(0.5, None)),     # slow push onto a face
+    "follow": dict(z=(1.2, 1.2), x=(None, None), y=(None, None)),      # track a walking/flying character
+    "float": dict(z=(1.06, 1.1), x=(0.49, 0.51), y=(0.5, 0.5)),        # dreamy handheld drift
+    "dolly_zoom": dict(z=(1.0, 1.25), x=(0.5, None), y=(0.55, None)),
 }
+FRAMES = {"wide": 1.0, "full": 1.12, "medium": 1.32, "close": 1.6, "extreme": 2.0}
 
 
-def camera_at(cam: dict, t, dur):
-    p = dict(CAM_PRESETS.get(cam.get("move", "drift"), CAM_PRESETS["drift"]))
-    z0, z1 = cam.get("from", p["z"][0]), cam.get("to", p["z"][1])
-    xs = cam.get("x", p["x"])
-    ys = cam.get("y", p["y"])
-    if not isinstance(xs, (list, tuple)):
-        xs = (xs, xs)
-    if not isinstance(ys, (list, tuple)):
-        ys = (ys, ys)
+def camera_at(cam: dict, t, dur, target=None):
+    """target(t) -> (x, y_frame_centre) of the `on:` character for the current framing."""
+    move = cam.get("move", "drift")
+    p = dict(CAM_PRESETS.get(move, CAM_PRESETS["drift"]))
+    fz = FRAMES.get(cam.get("frame")) if cam.get("frame") else None
+    z0 = cam.get("from", p["z"][0] if not fz or move in ("establish", "reveal", "push_to", "dolly_zoom") else fz)
+    z1 = cam.get("to", p["z"][1] if not fz else fz)
     k = EASES.get(cam.get("ease", "inout"), ease_in_out)(clamp(t / max(0.01, dur)))
+    tx = ty = None
+    if target is not None:
+        tx, ty = target(t)
+    xs = list(cam.get("x", p["x"])) if isinstance(cam.get("x", p["x"]), (list, tuple)) else [cam["x"], cam["x"]]
+    ys = list(cam.get("y", p["y"])) if isinstance(cam.get("y", p["y"]), (list, tuple)) else [cam["y"], cam["y"]]
+    for arr, tv, dflt in ((xs, tx, 0.5), (ys, ty, 0.5)):
+        for i in range(2):
+            if arr[i] is None:
+                arr[i] = tv if tv is not None else dflt
+    if target is not None and "x" not in cam and move in ("static", "drift", "push_in", "pull_out", "close_up", "float"):
+        xs = [lerp(xs[0], tx, 0.75), lerp(xs[1], tx, 0.75)]
+        ys = [lerp(ys[0], ty, 0.6), lerp(ys[1], ty, 0.6)]
     z = lerp(z0, z1, k)
     x, y = lerp(xs[0], xs[1], k), lerp(ys[0], ys[1], k)
+    if cam.get("breathe", True):          # the camera of the reference is never fully still
+        b = 1.6 if move == "float" else 1.0
+        x += b * (0.0022 * math.sin(0.31 * t + 1.3) + 0.0011 * math.sin(0.83 * t))
+        y += b * (0.0016 * math.sin(0.23 * t + 0.4))
+        z += b * 0.006 * (0.5 + 0.5 * math.sin(0.17 * t))
     return x, y, max(1.0, z)
 
 
@@ -280,6 +308,106 @@ def _ppu_bucket(need):
     return 22.0
 
 
+LAYER_PAR = {"sky": 0.08, "far": 0.28, "mid": 0.55, "set": 0.82, "ground": 1.0, "front": 1.3}
+
+
+def life_casts(life, dur, ground, water, seed=0):
+    """Expand ambient-life specs into performer configs with actions spanning the shot."""
+    import random as _r
+    out = []
+    for i, L in enumerate(life):
+        r = _r.Random(f"{seed}-{i}-{L['who']}")
+        mode = L.get("mode", "graze")
+        depth = float(L.get("depth", 0.7))
+        # background life sits further back than its depth suggests: smaller & higher on the set
+        base = {"who": L["who"], "depth": depth, "strings": False, "ambient": True,
+                "scale": float(L.get("scale", 1.0)) * (0.55 + 0.45 * depth) ** 2}
+        if L.get("y") is not None:
+            base["y"] = float(L["y"])
+        layer = "mid" if depth < 0.7 else "set"
+        if mode in ("run_across", "walk_across", "march"):
+            speed = float(L.get("speed", 0.25 if mode == "run_across" else 0.06))
+            d = 1.5 / speed
+            period = max(float(L.get("period", 12)), d * 0.35 if mode == "run_across" else 4.0)
+            t0 = r.uniform(0.3, min(4.0, max(0.4, period * 0.4)))
+            k = 0
+            while t0 < dur:
+                go_right = (k + r.randint(0, 1)) % 2 == 0
+                x0, x1 = (-0.25, 1.25) if go_right else (1.25, -0.25)
+                n = int(L.get("n", 1))
+                for j in range(n):
+                    off = j * 0.07 * (-1 if go_right else 1)
+                    act = "run" if mode == "run_across" else "walk"
+                    c = dict(base, x=x0 + off, face="right" if go_right else "left",
+                             actions=[{"do": "hidden", "at": 0, "dur": t0}, {"do": act, "at": t0, "to": x1 + off, "dur": d,
+                                                                             "steps": d * (3.2 if act == "run" else 1.6),
+                                                                             "ease": False, "sfx": False}])
+                    out.append((layer, c))
+                t0 += d * (1.0 if mode != "run_across" else 0.6) + period
+                k += 1
+        elif mode == "graze":
+            x = float(L.get("x", r.uniform(0.1, 0.9)))
+            acts = []
+            t = r.uniform(0.5, 2.0)
+            while t < dur:
+                acts.append({"do": "graze", "at": t, "dur": r.uniform(2.0, 3.5), "sfx": False})
+                t += r.uniform(4.5, 7.0)
+            out.append((layer, dict(base, x=x, face=r.choice(["left", "right"]), actions=acts)))
+        elif mode in ("peck", "perch"):
+            x = float(L.get("x", r.uniform(0.1, 0.9)))
+            acts = [{"do": "peck", "at": t, "dur": 1.2, "sfx": False} for t in [r.uniform(0.5, 1.5) + 3.5 * k for k in range(int(dur / 3.5) + 1)]]
+            out.append(("set", dict(base, x=x, face=r.choice(["left", "right"]), actions=acts if mode == "peck" else acts[::2])))
+        elif mode == "glide":
+            wy = (water[0]["y0"] + 0.025) if water else ground - 0.03
+            x0 = r.uniform(0.05, 0.4)
+            v = float(L.get("speed", 0.02))
+            out.append(("set", dict(base, x=x0, y=wy, face="right",
+                                    actions=[{"do": "move", "at": 0, "to": x0 + v * dur, "dur": dur}])))
+            out.append(("set", dict(base, x=x0 + 0.5, y=wy + 0.015, face="left", scale=0.85,
+                                    actions=[{"do": "move", "at": 0, "to": x0 + 0.5 - v * dur * 0.8, "dur": dur}])))
+        elif mode == "fly_across":
+            speed = float(L.get("speed", 0.2))
+            d = 1.5 / speed
+            period = float(L.get("period", 9))
+            t0 = r.uniform(0.5, 3.0)
+            while t0 < dur:
+                go_right = r.random() < 0.5
+                x0, x1 = (-0.2, 1.2) if go_right else (1.2, -0.2)
+                y = float(L.get("y", r.uniform(0.22, 0.42)))
+                out.append(("mid", dict(base, x=x0, y=y, face="right" if go_right else "left",
+                                        actions=[{"do": "hidden", "at": 0, "dur": t0},
+                                                 {"do": "fly", "at": t0, "to": x1, "dur": d, "height": 0, "arc": False,
+                                                  "sfx": False}])))
+                t0 += d + period
+        elif mode == "circle":
+            out.append(("mid", dict(base, x=0.5, y=float(L.get("y", 0.22)),
+                                    actions=[{"do": "soar", "at": 0, "dur": dur + 5, "cx": r.uniform(0.35, 0.65),
+                                              "rx": r.uniform(0.18, 0.32), "ry": 5.0, "speed": r.uniform(0.18, 0.3),
+                                              "phase": r.uniform(0, 6)}])))
+        elif mode == "hover":
+            y = float(L.get("y", 0.55))
+            x0 = r.uniform(0.15, 0.85)
+            acts = [{"do": "hover", "at": 0, "dur": dur + 2, "flap": 18 if "butterfly" in L["who"] else 10}]
+            t, x = 0.0, x0
+            while t < dur:
+                nx = min(0.95, max(0.05, x + r.uniform(-0.2, 0.2)))
+                acts.append({"do": "move", "at": t, "to": nx, "dur": 2.5, "dy": r.uniform(-4, 4)})
+                t += 2.5
+                x = nx
+            out.append(("set", dict(base, x=x0, y=y, actions=acts)))
+        elif mode == "leap":
+            period = float(L.get("period", 6))
+            wy = float(L.get("y", (water[0]["y0"] + 0.05) if water else ground))
+            t0 = r.uniform(0.5, 2.5)
+            while t0 < dur:
+                go_right = r.random() < 0.5
+                out.append(("set", dict(base, x=r.uniform(0.15, 0.85), y=wy, face="right" if go_right else "left",
+                                        actions=[{"do": "hidden", "at": 0, "dur": t0},
+                                                 {"do": "leap", "at": t0, "dur": 0.9, "height": 12, "dx": 0.06}])))
+                t0 += period * r.uniform(0.7, 1.3)
+    return out
+
+
 class Performer:
     def __init__(self, cfg, W, H, ground, zmax=1.15, seed=0):
         self.cfg = cfg
@@ -317,9 +445,21 @@ class Performer:
         self.seed = (hash(str(who)) % 1000) / 97.0 + seed
         self.strings = cfg.get("strings", True)
         self.shadow = cfg.get("shadow_puppet", False)
+        self.ambient = cfg.get("ambient", False)
         self.order = float(cfg.get("z", self.depth))
 
-    def draw(self, frame, t, cam, light, env_time):
+    def head_target(self, t, framing="medium"):
+        """(x, y) frame point to centre the camera on for this character."""
+        st = A.evaluate(self.rig, self.x0, self.face0, self.mode0, self.actions, t, self.seed)
+        gy = self.ground - (1 - self.depth) * 0.12 if self.y == "ground" else float(self.y)
+        h = CHAR_HEIGHT * self.U * self.scale * self.depth ** 0.8 * float(self.rig.meta.get("scale", 1.0)) * st.scale
+        tall = (self.rig.ground + 52) * h / self.H if self.kind == "humanoid" else self.rig.ground * 2.0 * h / self.H
+        if st.mode == "seated":
+            tall *= 0.62
+        frac = {"wide": 0.45, "full": 0.58, "medium": 0.68, "close": 0.8, "extreme": 0.86}.get(framing, 0.66)
+        return st.x, gy + st.dy * h / self.H - tall * frac
+
+    def draw(self, frame, t, cam, light, env_time, sil_k=0.0):
         st = A.evaluate(self.rig, self.x0, self.face0, self.mode0, self.actions, t, self.seed)
         if st.alpha <= 0.01:
             return
@@ -345,7 +485,12 @@ class Performer:
             nw = max(2, int(w * max(0.04, st.flipx)))
             canvas = canvas.resize((nw, h), Image.BILINEAR)
             ox = ox * nw / w
-        sil = st.silhouette or self.shadow
+        sil = st.silhouette or self.shadow or sil_k > 0.97
+        if 0.02 < sil_k <= 0.97 and not sil:
+            a = canvas.getchannel("A")
+            dark = Image.new("RGBA", canvas.size, (18, 12, 8, 255))
+            canvas = Image.blend(canvas, dark, sil_k)
+            canvas.putalpha(a)
         if sil:
             a = canvas.getchannel("A")
             canvas = Image.new("RGBA", canvas.size, (18, 12, 8, 255))
@@ -357,9 +502,9 @@ class Performer:
             canvas = Image.blend(canvas, tint, fog)
             canvas.putalpha(a)
         night = light.get("time") in ("night", "cosmic", "fire")
-        glow_op = (0.28 if not night else 0.18) + 0.7 * st.glow
+        glow_op = ((0.28 if not night else 0.18) + 0.7 * st.glow) * (0.45 if self.ambient else 1.0) * (1 - 0.7 * sil_k)
         glow = None if sil else (light.get("light", "#ffe6a8"), glow_op, max(6, H * (0.012 + 0.02 * st.glow)))
-        shadow = None if sil else (H * 0.009, H * 0.006, 0.38 if not night else 0.25, H * 0.008)
+        shadow = None if sil else (H * 0.009, H * 0.006, (0.38 if not night else 0.25) * (0.6 if self.ambient else 1.0), H * 0.008)
         img = canvas
         if glow or shadow:
             from .gfx import drop_shadow_and_glow
@@ -371,7 +516,7 @@ class Performer:
         from .envs import _safe_paste
         _safe_paste(frame, img, x, y)
         # puppet strings to the fly bar (above the frame)
-        if self.strings and not st.flying and st.mode != "lying" and not sil and st.alpha > 0.5:
+        if self.strings and not self.ambient and not st.flying and st.mode != "lying" and not sil and st.alpha > 0.5:
             pts = []
             for an in ("head", "hand_f", "hand_b"):
                 if an in self.rig.anchors and self.rig.anchors[an][0] in solved:
@@ -390,9 +535,21 @@ class ShotRuntime:
         self.env = build_env(shot["env"], W, H, seed=shot.get("env_seed", 0))
         self.dur = float(shot["dur"])
         cam = shot.get("camera", {}) or {}
-        zmax = max(cam.get("from", 1.15), cam.get("to", 1.15), 1.15)
+        zmax = max(cam.get("from", 1.15), cam.get("to", 1.15), 1.15, FRAMES.get(cam.get("frame"), 1.0),
+                   1.5 if cam.get("move") in ("push_to", "reveal", "establish") else 1.0)
         self.performers = [Performer(c, W, H, self.env.ground, zmax, seed=i) for i, c in enumerate(shot.get("cast", []))]
         self.performers.sort(key=lambda p: p.order)
+        self.by_id = {p.cfg.get("id", p.cfg.get("who")): p for p in self.performers}
+        # ambient background life (deer, swans, birds, soldiers ...) — storyboard `life:` adds/overrides, false disables
+        life = [] if shot.get("life") is False else list(self.env.life) + list(shot.get("life") or [])
+        self.life = {"mid": [], "set": []}
+        for layer, c in life_casts(life, self.dur + 3.0, self.env.ground, self.env.water, seed=f"{shot.get('id')}"):
+            try:
+                self.life[layer].append(Performer(c, W, H, self.env.ground, 1.15, seed=len(self.life[layer])))
+            except KeyError:
+                pass
+        for k in self.life:
+            self.life[k].sort(key=lambda p: p.depth)
         L = dict(self.env.light)
         L.update(shot.get("light", {}) or {})
         self.light = L
@@ -440,9 +597,17 @@ class ShotRuntime:
         self.grade = shot.get("grade") or default_grade
 
     # ------------------------------------------------------------------
-    def camera(self, t):
+    def camera(self, t, cam_dx=0.0):
         cam = self.shot.get("camera", {}) or {}
-        x, y, z = camera_at(cam, t, self.dur)
+        target = None
+        on = cam.get("on") or cam.get(True) or cam.get("target") or (cam.get("follow") if isinstance(cam.get("follow"), str) else None)
+        if on and on in self.by_id:
+            perf = self.by_id[on]
+            lag = 0.35 if cam.get("move") == "follow" else 0.0
+            framing = cam.get("frame", "medium")
+            target = lambda tt, p=perf, f=framing, lg=lag: p.head_target(max(0.0, tt - lg), f)
+        x, y, z = camera_at(cam, t, self.dur, target)
+        x += cam_dx
         sh = float(cam.get("shake", 0.0))
         for n, at in self.fx_events:
             if n in ("shake", "quake") and 0 <= t - at < 0.8:
@@ -452,6 +617,55 @@ class ShotRuntime:
             y += sh * 0.006 * math.cos(t * 43)
             z = max(z, 1.02)
         return clamp_cam(x, y, z)
+
+    def dim_level(self, t):
+        """0 = normal light, 1 = stage lights down (puppets become silhouettes against the backdrop)."""
+        lvl = 0.0
+        for n, at in sorted(self.fx_events, key=lambda e: e[1]):
+            if n in ("dim", "silhouettes", "lights_down") and t >= at:
+                lvl = max(lvl, smooth((t - at) / 1.2))
+            elif n in ("lights_up", "undim") and t >= at:
+                lvl = min(lvl, 1 - smooth((t - at) / 1.2))
+        return lvl
+
+    def _anim(self, frame, layer, order, t, cam):
+        """Wind-animated env props: traveling gusts make trees, grass & flowers sway in a wave."""
+        W, H = self.W, self.H
+        par = LAYER_PAR.get(layer, 1.0)
+        gust = 0.65 + 0.35 * math.sin(0.23 * t) + 0.15 * math.sin(0.71 * t + 1.0)
+        for a in self.env.anim:
+            if a["layer"] != layer or a["order"] != order:
+                continue
+            sx, sy, ez = to_screen(a["x"], a["y"], cam, par, W, H)
+            if sx < -W * 0.5 or sx > W * 1.5:
+                continue
+            ph = a["phase"] - a["x"] * 4.0
+            w = 2 * math.pi * a["freq"] * 0.5
+            kind = a["kind"]
+            if kind.startswith("sway"):
+                ang = a["amp"] * gust * (math.sin(w * t + ph) + 0.35 * math.sin(2.7 * w * t + ph * 1.7))
+                affine_paste(frame, a["sprite"], sx, sy, ang, ez, ez)
+            elif kind == "bob":
+                affine_paste(frame, a["sprite"], sx, sy + a["amp"] * H * math.sin(w * t + ph), 0.8 * math.sin(w * t + ph + 1), ez, ez)
+            elif kind == "flutter":
+                kx = 1 - a["amp"] * (0.5 + 0.5 * math.sin(3.2 * w * t + ph))
+                affine_paste(frame, a["sprite"], sx, sy, 0.6 * math.sin(w * t + ph), ez * kx, ez)
+            else:
+                affine_paste(frame, a["sprite"], sx, sy, 0, ez, ez)
+
+    def _drift(self, frame, t, cam):
+        W, H = self.W, self.H
+        for d in self.env.drift:
+            x = ((d["x"] + d["speed"] * t + 0.35) % 1.7) - 0.35
+            sx, sy, ez = to_screen(x, d["y"] + 0.006 * math.sin(t * 0.4 + d["x"] * 5), cam, d.get("parallax", 0.2), W, H)
+            spr = d["sprite"]
+            if d.get("curl") and d["speed"] < 0:
+                spr = spr.flipped()
+            affine_paste(frame, spr, sx, sy, 2.0 * math.sin(t * 0.6 + d["x"]) if d.get("curl") else 0, ez, ez)
+
+    def _life(self, frame, layer, t, cam, sil_k):
+        for p in self.life.get(layer, []):
+            p.draw(frame, t, cam, self.light, t, sil_k * 0.6)
 
     def _hanging(self, frame, items, t, cam):
         W, H = self.W, self.H
@@ -482,31 +696,34 @@ class ShotRuntime:
             frame.alpha_composite(glow, (int(sx - glow.size[0] / 2), int(sy - glow.size[1] * 0.62)))
             affine_paste(frame, spr, sx, sy, 0, 1.0, 1.0 + 0.06 * math.sin(t * 13 + fl["phase"]))
 
-    def frame(self, t) -> Image.Image:
+    def frame(self, t, cam_dx=0.0) -> Image.Image:
         W, H = self.W, self.H
-        cam = self.camera(t)
+        cam = self.camera(t, cam_dx)
+        sil_k = self.dim_level(t)
         frame = Image.new("RGBA", (W, H), (0, 0, 0, 255))
         drawn_perf = False
-        over_done = False
         for name, par, img in self.env.layers:
             if name == "front" and not drawn_perf:
-                self._actors(frame, t, cam)
-                for spr, x, y in self.extra_layers.pop("over", []) if False else self.extra_layers.get("over", []):
+                self._actors(frame, t, cam, sil_k)
+                for spr, x, y in self.extra_layers.get("over", []):
                     sx, sy, ez = to_screen(x, y, cam, 1.0, W, H)
                     affine_paste(frame, spr, sx, sy, 0, ez, ez)
                 drawn_perf = True
-                over_done = True
-            frame.alpha_composite(layer_view(img, cam, par, W, H))
+            self._anim(frame, name, "under", t, cam)
+            if img is not None:
+                frame.alpha_composite(layer_view(img, cam, par, W, H))
+            self._anim(frame, name, "over", t, cam)
             if name == "sky":
+                self._drift(frame, t, cam)
                 draw_birds(frame, self.env.birds, t, W, H, seed=self.seed,
                            color="#2a1c14" if self.light.get("time") not in ("night", "cosmic") else "#0a0a14")
             if name == "mid":
-                for wl, wp in self.waves[:1]:
-                    pass
+                self._life(frame, "mid", t, cam, sil_k)
             if name == "set":
                 if self.waves:
                     wl, wp = self.waves[int(t * 4) % len(self.waves)]
                     frame.alpha_composite(layer_view(wl, cam, wp, W, H))
+                self._life(frame, "set", t, cam, sil_k)
                 self._hanging(frame, self.env.hanging + self.extra_hanging, t, cam)
             if name == "ground":
                 for spr, x, y in self.extra_layers.get("ground", []):
@@ -514,24 +731,25 @@ class ShotRuntime:
                     affine_paste(frame, spr, sx, sy, 0, ez, ez)
                 self._flames(frame, t, cam)
         if not drawn_perf:
-            self._actors(frame, t, cam)
-        if not over_done:
+            self._actors(frame, t, cam, sil_k)
             for spr, x, y in self.extra_layers.get("over", []):
                 sx, sy, ez = to_screen(x, y, cam, 1.0, W, H)
                 affine_paste(frame, spr, sx, sy, 0, ez, ez)
         for spr, x, y in self.extra_layers.get("front", []):
             sx, sy, ez = to_screen(x, y, cam, 1.3, W, H)
             affine_paste(frame, spr, sx, sy, 0, ez, ez)
-        return self._light(frame, t)
+        return self._light(frame, t, sil_k)
 
-    def _actors(self, frame, t, cam):
+    def _actors(self, frame, t, cam, sil_k=0.0):
         for p in self.performers:
-            p.draw(frame, t, cam, self.light, t)
+            p.draw(frame, t, cam, self.light, t, sil_k)
 
-    def _light(self, frame, t):
+    def _light(self, frame, t, sil_k=0.0):
         W, H = self.W, self.H
         spot, vig, haze, rays = self.tex
         rgbf = frame.convert("RGB")
+        if sil_k > 0.01:   # house lights down: backdrop glows on, scene dims
+            rgbf = Image.eval(rgbf, lambda v, kk=sil_k: int(v * (1 - 0.22 * kk)))
         # warm stage spot (screen)
         rgbf = ImageChops.screen(rgbf, Image.eval(spot, lambda v: int(v * 0.30)))
         if self.rays_k > 0.01:
@@ -606,6 +824,27 @@ class Timeline:
             t -= d
         return len(self.shots) - 1, t
 
+    def _wipe(self, i, t, td, tr):
+        """Foreground wipe: a big dark element sweeps past the lens (camera trucking right) and
+        hides the change of set — the reference's signature scene transition."""
+        W, H = self.W, self.H
+        k = clamp(t / td)
+        prev = self.runtime(i - 1)
+        cur = self.runtime(i)
+        if tr == "wipe":
+            env = self.shots[i]["env"]
+            tr = next((v for kk, v in WIPE_BY_LOCALE.items() if env.startswith(kk)), "wipe_tree")
+        kb = smooth(clamp((k - 0.32) / 0.36))
+        a = prev.frame(float(self.shots[i - 1]["dur"]) + t, cam_dx=0.05 * k) if kb < 0.999 else None
+        b = cur.frame(t, cam_dx=-0.05 * (1 - k)) if kb > 0.001 else None
+        base = a if b is None else (b if a is None else Image.blend(a, b, kb))
+        out = base.convert("RGBA")
+        e = ease_in_out(k)
+        for spr, off, ys in wipe_sprites(tr, H):
+            x = W * (1.45 - 1.9 * e + off)
+            affine_paste(out, spr, x, H * ys, 0, 1.0, 1.0)
+        return out.convert("RGB")
+
     def render(self, fi) -> Image.Image:
         T = fi / self.fps
         i, t = self.locate(T)
@@ -613,7 +852,7 @@ class Timeline:
         # transition into this shot from the previous one
         s = self.shots[i]
         tr = s.get("transition", "crossfade")
-        td = float(s.get("trans_dur", 0.6 if tr != "cut" else 0))
+        td = float(s.get("trans_dur", (1.3 if str(tr).startswith("wipe") else 0.6) if tr != "cut" else 0))
         if i > 0 and tr != "cut" and t < td:
             prev = self.runtime(i - 1)
             k = smooth(t / td)
@@ -628,6 +867,8 @@ class Timeline:
                     img = Image.blend(Image.new("RGB", img.size, (0, 0, 0)), img, (k - 0.5) * 2)
             elif tr == "flash":
                 img = Image.blend(img, Image.new("RGB", img.size, (255, 246, 222)), (1 - k) * 0.9)
+            elif tr.startswith("wipe"):
+                img = self._wipe(i, t, td, tr)
         # curtain
         intro, outro = self.plan.get("intro", {}), self.plan.get("outro", {})
         if intro.get("curtain") or outro.get("curtain"):
@@ -645,6 +886,41 @@ class Timeline:
             if k_open is not None and k_open < 0.999:
                 img = self._curtain.overlay(img, k_open, T)
         return img
+
+
+WIPE_BY_LOCALE = {"forest": "wipe_leaf", "palace_garden": "wipe_leaf", "vrindavan": "wipe_leaf", "ashram": "wipe_leaf",
+                  "village": "wipe_leaf", "lotus": "wipe_leaf", "palace": "wipe_pillar", "temple": "wipe_pillar",
+                  "yagya": "wipe_pillar", "dwarka": "wipe_pillar", "patala": "wipe_pillar", "lanka": "wipe_pillar",
+                  "swarga": "wipe_cloud", "kshirsagar": "wipe_cloud", "cosmic": "wipe_cloud", "kailash": "wipe_cloud"}
+
+
+@lru_cache(maxsize=8)
+def wipe_sprites(kind, H):
+    """Foreground elements for wipes — pre-silhouetted and soft-focused (they are right at the lens)."""
+    U = H / 100.0
+    if kind == "wipe_pillar":
+        sp = build_prop("fg_pillar", U * 1.1, h=120)
+        items = [(sp, 0.0, 1.06), (sp, 0.42, 1.06)]
+    elif kind == "wipe_cloud":
+        c = build_prop("cloud", U * 4.2, color="#f3e9d2", kind="puffy", seed=3)
+        items = [(c, 0.0, 0.62), (c, 0.36, 0.86), (c, -0.3, 0.4)]
+    elif kind == "wipe_tree":
+        tr = build_prop("tree", U * 1.6, kind="night", h=70, seed=5, night=True)
+        items = [(tr, 0.0, 1.12), (build_prop("leaf_cluster", U * 1.5, seed=2), 0.3, 1.1)]
+    else:
+        lc = build_prop("leaf_cluster", U * 1.9, seed=1)
+        lc2 = build_prop("leaf_cluster", U * 1.6, seed=4)
+        items = [(lc, 0.0, 1.18), (lc2, 0.33, 0.95), (lc, -0.28, 0.72)]
+    out = []
+    for spr, off, ys in items:
+        if kind != "wipe_cloud":
+            spr = spr.silhouette("#120c08")
+        pad = int(H / 60)
+        im = Image.new("RGBA", (spr.img.width + 2 * pad, spr.img.height + 2 * pad), (0, 0, 0, 0))
+        im.alpha_composite(spr.img, (pad, pad))
+        im = im.filter(ImageFilter.GaussianBlur(H / 200))
+        out.append((Sprite(im, spr.px + pad, spr.py + pad), off, ys))
+    return out
 
 
 def _encode_chunk(args):

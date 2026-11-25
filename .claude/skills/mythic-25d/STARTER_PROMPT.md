@@ -13,7 +13,12 @@ Open Claude Code in this repo (the skill auto-loads from `.claude/skills/mythic-
 - curtain intro + outro रखो, outro टेक्स्ट: "[॥ जय श्री राम ॥]"
 - narrator आवाज़: hi-IN-MadhurNeural, संवादों के लिए हर पात्र की अलग आवाज़/पिच
 - हर वाक्य के लिए सही दृश्य (env) और समय (dawn/day/dusk/night), सही पात्र (catalog ids), हर बोलने वाले पात्र का अभिनय
-- कैमरा मूवमेंट हर शॉट में अलग, जहाँ श्लोक हो वहाँ shloka card
+- कैमरा बिल्कुल reference वीडियो जैसा: scene की शुरुआत crane_down/establish से, चलते पात्र पर follow,
+  भावुक संवाद पर push_to, सफ़र पर truck_left/right, दिव्य क्षण पर reveal; जगह बदलने पर wipe (पत्तों/खंभे वाला
+  foreground wipe), समय बदलने पर dip; कहानी-के-अंदर-कहानी में dim (पात्र silhouette)
+- background ज़िंदा रहे: पेड़-घास-फूल हवा में हिलें, बादल चलें, जंगल में हिरन दौड़ें, पक्षी उड़ें (env अपने-आप करता है;
+  ज़रूरत हो तो shot में `life:` से और जानवर जोड़ो)
+- जहाँ श्लोक हो वहाँ shloka card
 - music mood: [devotional/epic_battle/...], युद्ध/दिव्य दृश्यों में mood बदलो
 पहले storyboard.yaml लिखो, validate करो, 3 key shots के stills दिखाओ, फिर preview बनाओ, review पढ़कर सुधारो,
 और अंत में final render करो। आख़िर में बताओ कि output files कहाँ हैं।
@@ -67,7 +72,9 @@ mythic_projects/[name] का review चलाओ, qa.json और contact sheet 
 Turn the Hindi script below into a painted 2.5D Indian puppet-theatre film using the mythic-25d skill.
 Project: [name], 16:9, title "[title]". Curtain intro/outro. Narrator hi-IN-MadhurNeural, distinct voices per
 character. One shot per beat with the right environment & time of day, catalog characters only, real acting
-for every speaker, varied camera moves, shloka cards for verses, music mood [mood] switching for battle/divine
+for every speaker, reference-style camera (crane_down/establish openings, follow walkers, push_to emotional
+lines, truck for travel, reveal for divine moments, foreground `wipe` between sets, `dim` silhouettes), a
+living background (wind, drifting clouds, animals via `life:`), shloka cards for verses, music mood [mood] switching for battle/divine
 beats. Write storyboard.yaml → validate → show me 3 key stills → preview → fix what the review flags → final.
 Tell me where the outputs are.
 

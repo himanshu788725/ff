@@ -54,9 +54,11 @@ ochre `ochre` · mustard `mustard` · saffron `saffron` · vermilion `vermilion`
 - Raised platforms (chariot, throne): `y: 0.74` and draw the platform with `layer: over`.
 - Hanging sun/moon come with each env (top-right). Leave headroom: crowns are tall.
 
-## Shot recipes
+## Shot recipes (camera grammar: see camera-and-motion.md)
 
-- **Opening**: curtain intro → establishing env with `pan_right`, birds, no dialogue.
+- **Opening**: curtain intro → `crane_down` from the hanging sun/clouds onto the set, no dialogue; next shot
+  `establish` on the first speaker.
+- **Travel**: `transition: wipe` + `truck_right`, or `follow` the walker; background deer/birds keep moving.
 - **Darshan**: `pull_out`, `grade: swarna`, `fx: ["divine_burst@0.5", rays, petals]`, deity `appear` + `bless`,
   devotee `namaste` → `bow`.
 - **Battle**: `kurukshetra_dusk` (+ `music: {mood: epic_battle}`), chariot `layer: over`, horses `rear`, archers

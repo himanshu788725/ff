@@ -1,6 +1,6 @@
 ---
 name: mythic-25d
-description: Make painted 2.5D Indian-mythology puppet-theatre films (kathputli / paper-cut string puppets, hanging cloud & sun props, red-curtain stage, shadow-screen scenes) from a Hindi script — with 600+ ready characters (Tridev, Devis, Dashavatar, Devas, Ramayana, Mahabharata, rishis, rakshasas, nagas), 117 animals & birds, 110 environments, Hindi Devanagari word-timed subtitles, Hindi neural voice, procedural raga music + SFX, first-pass mix, colour grading, review and troubleshooting. Use for any Hindi/Sanskrit mythological video, Ramayana/Mahabharata/Puranic story animation, YouTube long-form (16:9) or Shorts/Reels (9:16), shloka explainer, or when the user asks for this puppet/painted 2.5D style.
+description: Make painted 2.5D Indian-mythology puppet-theatre films (kathputli / paper-cut string puppets, hanging cloud & sun props, red-curtain stage, shadow-screen scenes) from a Hindi script — with 600+ ready characters (Tridev, Devis, Dashavatar, Devas, Ramayana, Mahabharata, rishis, rakshasas, nagas), 117 animals & birds, 110 environments, reference-style camera moves with layered parallax and a living animated background, Hindi Devanagari word-timed subtitles, Hindi neural voice, procedural raga music + SFX, first-pass mix, colour grading, review and troubleshooting. Use for any Hindi/Sanskrit mythological video, Ramayana/Mahabharata/Puranic story animation, YouTube long-form (16:9) or Shorts/Reels (9:16), shloka explainer, or when the user asks for this puppet/painted 2.5D style.
 ---
 
 # Mythic 2.5D — painted puppet-theatre film skill
@@ -13,6 +13,10 @@ thin strings to the fly-bar, tall stacked gold mukut with a red plume, Kalamkari
 props hanging on strings (scalloped clouds, rayed sun, crescent moon), warm lamp-lit stage with heavy vignette,
 drifting haze, dust motes, god-rays, film grain; red velvet curtain intro/outro with diya footlights and audience
 silhouettes; shadow-screen (Tholu Bommalata) scenes; small subtitles at the bottom with the spoken word lit gold.
+Camera language like the reference (see `references/camera-and-motion.md`): long continuous takes, slow
+truck/crane/push moves with deep 6-layer parallax, foreground wipes (banana leaves / pillars) between sets,
+follow moves on walking puppets, lights-down silhouettes — and a living backdrop (wind in trees/grass/flowers,
+drifting clouds, deer/peacocks/swans/birds/soldiers moving in the distance), all automatic per environment.
 
 ## Workflow (do these in order)
 
@@ -41,8 +45,13 @@ Render only some shots: `mythic.py render <proj> --shots s3,s4`.
 
 ## Rules that keep quality high
 
-- 4–9 s per shot for narration, 2–4 s for reaction/insert shots; a camera move on almost every shot
-  (`push_in`, `pull_out`, `pan_left/right`, `drift`, `close_up`); never 3 static shots in a row.
+- 4–9 s per shot for narration, 2–4 s for reaction/insert shots; a camera move on every shot. Think like the
+  reference: open a scene with `crane_down` or `establish` (on the speaker), `follow` walking characters,
+  `push_to` for emotional lines, `truck_left/right` for travel, `reveal` for divine moments; change sets with
+  `transition: wipe` (foreground leaves/pillars) or a slow `crossfade`; `dip` for time jumps.
+- Use `fx: ["dim@t"]` for story-within-story / dramatic beats (puppets become silhouettes against the lit backdrop).
+- The background animates by itself (wind, clouds, animals). Add specific creatures with a shot `life:` list,
+  or `life: false` for a quiet, focused shot.
 - Every speaking character must be in that shot's `cast` with an `id` matching the line's `who` → it auto-talks.
 - Give puppets real acting: `walk` in/out, `point`, `bless`, `namaste`, `strike`, `shoot`, `fly`, `appear`,
   `grow`, `fall`, `angry`, `sad`... Face characters toward each other (`face: left|right`).
@@ -74,6 +83,7 @@ Render only some shots: `mythic.py render <proj> --shots s3,s4`.
 | `references/storyboard-schema.md` | every storyboard field |
 | `references/catalog-index.md` | all 719 character/animal/bird ids by category |
 | `references/environments.md` | 110 envs, props, actions, music moods, SFX, grades |
+| `references/camera-and-motion.md` | reference camera moves, wipes, silhouettes, living background, `life:` |
 | `references/art-direction.md` | the visual language, iconography, composition, shot recipes |
 | `references/subtitles-voice.md` | Hindi word-timed subtitles, voices, own recordings, shloka cards |
 | `references/audio-mixing.md` | music, SFX, ducking, loudness, stems |

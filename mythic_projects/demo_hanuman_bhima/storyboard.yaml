@@ -21,7 +21,7 @@ outro: {curtain: true, text: "॥ जय बजरंगबली ॥", subtitle
 shots:
   - id: s1_dhyan
     env: forest_banana_dawn
-    camera: {move: push_in, from: 1.0, to: 1.1}
+    camera: {move: crane_down}          # reference opening: start in the canopy/sky, descend onto the puppet
     narration: "द्वापर युग की बात है। गंधमादन पर्वत के कदली वन में, पवनपुत्र हनुमान राम-नाम का ध्यान कर रहे थे।"
     cast:
       - {who: hanuman, x: 0.5, pose: meditate}
@@ -31,7 +31,8 @@ shots:
 
   - id: s2_bhima_aata_hai
     env: forest_banana_day
-    camera: {move: pan_right}
+    transition: wipe                    # big dark banana leaves sweep past the lens
+    camera: {move: follow, on: bhima, frame: full}   # track Bhima as he walks in
     narration: "उसी मार्ग से महाबली भीम, द्रौपदी के लिए सौगंधिक पुष्प लेने जा रहे थे।"
     lines:
       - {who: bhima, text: "हे वृद्ध वानर! मेरे मार्ग से अपनी पूँछ हटाओ।"}
@@ -41,7 +42,7 @@ shots:
 
   - id: s3_vinti
     env: forest_banana_day
-    camera: {move: close_up, x: [0.6, 0.58]}
+    camera: {move: push_to, on: hanuman, frame: close}
     lines:
       - {who: hanuman, text: "पुत्र, मैं बहुत वृद्ध हूँ। तुम स्वयं ही मेरी पूँछ हटा दो।"}
     cast:
@@ -50,7 +51,7 @@ shots:
 
   - id: s4_shakti
     env: forest_banana_day
-    camera: {move: push_in, from: 1.05, to: 1.18, x: [0.45, 0.48]}
+    camera: {move: truck_left, from: 1.12, to: 1.2}
     narration: "भीम ने पूरी शक्ति लगा दी — पर वह पूँछ तिल भर भी नहीं हिली!"
     cast:
       - {who: hanuman, x: 0.64, pose: seated, face: left}
@@ -61,7 +62,8 @@ shots:
   - id: s5_virat
     env: forest_banana_dusk
     grade: swarna
-    camera: {move: drift}
+    transition: flash
+    camera: {move: reveal, on: hanuman, frame: medium}
     narration: "तब हनुमान ने अपना विराट रूप प्रकट किया। भीम पहचान गए — ये तो उनके बड़े भाई, स्वयं हनुमान हैं!"
     shloka:
       source: "हनुमत् स्तुति"
@@ -77,7 +79,9 @@ shots:
 
   - id: s6_vachan
     env: shadow_screen_night
-    camera: {move: drift}
+    transition: dip
+    camera: {move: float}
+    fx: ["dim@0.4"]                     # house lights down: the listeners become silhouettes
     narration: "हनुमान ने वचन दिया — धर्मयुद्ध में वे अर्जुन के रथ की ध्वजा पर विराजमान रहेंगे।"
     cast:
       - {who: hanuman, x: 0.3, y: 0.74, depth: 0.62, shadow_puppet: true, strings: false,
@@ -88,7 +92,8 @@ shots:
   - id: s7_kapidhwaj
     env: kurukshetra_dusk
     music: {mood: epic_battle}
-    camera: {move: push_in, from: 1.0, to: 1.12}
+    transition: wipe
+    camera: {move: establish, on: arjuna, frame: full}
     narration: "और इसी कारण कुरुक्षेत्र में अर्जुन का रथ, कपिध्वज कहलाया।"
     props:
       - {name: chariot, x: 0.45, layer: over, s: 2.0, emblem: hanuman, flag: mustard}
