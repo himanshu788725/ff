@@ -15,6 +15,8 @@ edge-tts, faster-whisper.
 | render very slow | final 1080p on few cores | iterate with `--quality preview` (half-res) or `draft`; `--shots` for a few shots; `--workers N`; close other apps |
 | `MemoryError` / machine freezes | too many workers at 4K | `--workers 2`, or 1080p |
 | puppets look blurry at close-ups | camera zoom > 1.3 or scale > 1.4 | engine picks sprite resolution automatically up to 22 px/unit; reduce zoom or scale |
+| puppets look flat / blend into the set | set too bright | `light: {bg_dim: 0.72, bg_desat: 0.7}` on the shot; use dusk/night envs; avoid same-colour costume & backdrop |
+| glow too strong / neon | very bright light colour | `light: {light: "#f0e0c0"}` or lower `CHAR_STYLE`/`pop_light` values |
 | character cut at top | crowns are tall | lower `scale`, use `pull_out`, or set camera `y: [0.46, 0.46]` |
 | puppet doesn't talk | line `who` ≠ cast `id` | give the cast entry `id:` equal to the speaker |
 | unknown env / character | typo / not in catalog | `mythic.py list envs`, `mythic.py search <name>` — or define it under `characters:` |

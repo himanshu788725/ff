@@ -368,8 +368,9 @@ add("ramayana_riksha", "riksha", [
     ("jambavati", "जाम्बवती", "Jambavati", dict(female=True, head="human", skin="#c8a070", saree=["#5a3a2a", "floral", "gold"], beard=None)),
 ])
 add("ramayana_rakshasa", "rakshasa", [
-    ("ravana", "रावण", "Ravana", dict(skin="#5a4a6a", crown="spiky", heads=["human"] * 9, fangs=False, items={"f": "khadga"},
-                                     dhoti=["maroon", "scales", "gold"], arms=4, extra_items=["trishul", "bow"])),
+    ("ravana", "रावण", "Ravana", dict(skin="#c4532c", crown="kirita", heads=["human"] * 9, fangs=False, items={"f": "khadga", "b": "dhal"},
+                                     dhoti=["#3f9a4a", "dots", "cream"], sash="mustard", arms=10, eye="almond", mustache="big",
+                                     extra_items=["trishul", "bow", "gada", "chakra", "parashu", "shakti", "arrow", "vajra"])),
     ("ravana_sanyasi", "साधु वेश रावण", "Ravana as sadhu", dict(skin="skin_tan", crown="jata", beard="long", lower="valkal", fangs=False,
                                                               eye="almond", angry=False, build="old", items={"f": "kamandalu"}, mustache=None)),
     ("kumbhakarna", "कुम्भकर्ण", "Kumbhakarna", dict(skin="#4a3a2a", scale=1.25, items={"f": "gada"}, crown="horns")),

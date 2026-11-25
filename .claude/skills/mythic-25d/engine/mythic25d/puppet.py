@@ -10,7 +10,12 @@ from __future__ import annotations
 import math
 import pickle
 
-from .gfx import Pen, arc_pts, catmull, limb, rot, move
+from .gfx import CHAR_STYLE, Pen, arc_pts, catmull, limb, rot, move
+
+
+def fin(p, **kw):
+    """Finish a puppet part with the thick-outline, bevelled 2.5D cut-out style."""
+    return p.finish(**{**CHAR_STYLE, **kw})
 from .heads import draw_head
 from .items import ITEMS, ITEM_REST, build_item
 from .rig import Part, Rig
@@ -170,7 +175,7 @@ def build_torso(s, b, ppu):
             (b["hw"] - 0.1, -1.2), (-b["hw"] + 0.1, -1.2)], fill=metal)
     for k in range(7):
         p.circle(-b["hw"] + 1.2 + k * (2 * b["hw"] - 2.4) / 6, -2.9, 0.36, fill="vermilion" if k % 2 else "emerald")
-    return p.finish(seed=1)
+    return fin(p, seed=1)
 
 
 def build_waist(s, b, ppu):
@@ -186,7 +191,7 @@ def build_waist(s, b, ppu):
     for x in (-1.6, 0, 1.6):
         p.line([(x * 0.6, 0), (x * 1.1, 13.4)], shade(col, -0.3), 0.18)
     p.line([(-3.0, 9.0), (-1.6, 15.8), (0.2, 13.8), (1.8, 15.6), (3.6, 9.0)], s["metal"], 0.45)
-    return p.finish(seed=2, inner=0.25)
+    return fin(p, seed=2, inner=0.25, ow=0.45)
 
 
 # =========================================================================== arms & hands
@@ -229,7 +234,7 @@ def build_upper_arm(s, b, ppu, armor=None):
     p.poly([(-0.9, y - 0.4), (0, y - 2.2), (0.9, y - 0.4)], fill=s["metal"])
     p.circle(0, y - 0.9, 0.36, fill="vermilion")
     p.rivet(0, 0.3, 0.75)
-    return p.finish(seed=3)
+    return fin(p, seed=3)
 
 
 def build_forearm(s, b, ppu, mode="grip"):
@@ -244,15 +249,12 @@ def build_forearm(s, b, ppu, mode="grip"):
                fill=s["metal"] if k % 2 == 0 else ("vermilion" if s.get("female") else shade(s["metal"], -0.2)))
     _hand(p, L, skin, mode, s["metal"], s.get("female", False))
     p.rivet(0, 0, 0.62)
-    return p.finish(seed=4)
+    return fin(p, seed=4)
 
 
 # =========================================================================== lower body
 
-def build_leg(s, b, ppu, back=False):
-    lw = b["lw"]
-    p = Pen((-8, -3, 9, 50), ppu)
-    skin = s["skin"] if not back else shade(s["skin"], -0.08)
+def _leg_cloth(s, back):
     col, pat, pc = (s["dhoti"] + [None, None])[:3]
     lower = s["lower"]
     if lower == "tiger":
@@ -260,41 +262,67 @@ def build_leg(s, b, ppu, back=False):
     elif lower == "valkal":
         col, pat, pc = "#9a6a3a", "vstripes", "#6a4422"
     elif lower == "loin":
-        col, pat, pc = col, None, None
-    if back:
-        col = shade(col, -0.1)
-    knee = 21.5 if lower != "loin" else 9.0
-    # shin + calf
-    p.poly(limb((0.2, knee - 1), (0.6, 43.4), lw * 0.82, lw * 0.56), fill=skin)
-    p.poly([(-lw * 0.42, knee + 2), (-lw * 0.62, knee + 7), (-lw * 0.3, knee + 12)], fill=skin, smooth=True)
-    # anklet with bells
-    p.poly(limb((-lw * 0.33, 41.8), (lw * 0.38, 41.8), 0.9, 0.9), fill=s["metal"])
-    for k in range(4):
-        p.circle(-lw * 0.28 + k * lw * 0.22, 42.9, 0.3, fill=s["metal"])
-    # foot pointing forward (+x)
-    foot = [(-1.9, 43.0), (1.4, 43.4), (4.4, 45.0), (5.9, 46.7), (5.4, 47.6), (-1.7, 47.6), (-2.4, 45.6)]
-    p.poly(foot, fill=skin, smooth=True)
-    if s.get("female"):
-        p.line([(-1.9, 47.2), (5.4, 47.2)], "#c4362a", 0.4)
-    p.line([(3.4, 46.6), (4.4, 47.2)], shade(skin, -0.4), 0.12)
-    # thigh cloth (puffy dhoti to the knee)
-    if lower == "armor":
+        pat, pc = None, None
+    elif lower == "armor":
         col = s.get("armor") or "#9a9488"
         pat, pc = "scales", shade(col, -0.35)
+    if back:
+        col = shade(col, -0.1)
+    return col, pat, pc
+
+
+def knee_of(s):
+    return 21.5 if s["lower"] != "loin" else 9.0
+
+
+def build_thigh(s, b, ppu, back=False):
+    """Hip -> knee: the puffy dhoti piece with its striped hem (overlaps the shin like a real cut-out)."""
+    lw = b["lw"]
+    knee = knee_of(s)
+    p = Pen((-9, -3, 9, knee + 4), ppu)
+    skin = s["skin"] if not back else shade(s["skin"], -0.08)
+    col, pat, pc = _leg_cloth(s, back)
+    if s["lower"] == "loin":
+        p.poly(limb((0, 0), (0.2, knee + 1), lw * 1.0, lw * 0.85), fill=skin)
     cloth = [(-lw * 0.86, -1.6), (lw * 0.9, -1.6), (lw * 1.06, 6.0), (lw * 1.08, knee - 2.0), (lw * 0.85, knee + 1.2),
              (-lw * 0.9, knee + 1.2), (-lw * 1.02, knee - 2.4), (-lw * 0.98, 6.0)]
-    p.poly(cloth, fill=col, smooth=True, n=6)
+    if s["lower"] == "loin":
+        cloth = [(-lw * 0.9, -1.6), (lw * 0.95, -1.6), (lw * 1.0, 4.0), (-lw * 0.95, 4.4)]
+    p.poly(cloth, fill=col, smooth=s["lower"] != "loin", n=6)
     if pat:
         p.pattern(cloth, pat, pc, 1.5 if pat == "dots" else 1.9, 0.42 if pat == "dots" else 0.5, smooth=True)
-    # folds + hem band (the striped border of the puppet dhoti)
-    for k in range(3):
-        x = -lw * 0.5 + k * lw * 0.5
-        p.line([(x, 2.0), (x + 0.6, knee - 3.0)], shade(col, -0.28), 0.16)
-    hem = [(-lw * 0.92, knee - 1.4), (lw * 0.9, knee - 1.4), (lw * 0.86, knee + 1.2), (-lw * 0.92, knee + 1.2)]
-    p.poly(hem, fill=s["metal"])
-    p.pattern(hem, "dots", "vermilion", 1.0, 0.3)
-    p.rivet(0.3, knee + 3.2, 0.55)
-    return p.finish(seed=5 + back)
+    if s["lower"] != "loin":
+        for k in range(3):
+            x = -lw * 0.5 + k * lw * 0.5
+            p.line([(x, 2.0), (x + 0.6, knee - 3.0)], shade(col, -0.28), 0.16)
+        hem = [(-lw * 0.92, knee - 1.4), (lw * 0.9, knee - 1.4), (lw * 0.86, knee + 1.2), (-lw * 0.92, knee + 1.2)]
+        p.poly(hem, fill=s["metal"])
+        p.pattern(hem, "dots", "vermilion", 1.0, 0.3)
+    p.rivet(0.0, 0.6, 0.6)
+    return fin(p, seed=5 + back)
+
+
+def build_shin(s, b, ppu, back=False):
+    """Knee -> foot (pivot at the knee rivet): calf, anklet with bells, foot."""
+    lw = b["lw"]
+    knee = knee_of(s)
+    L = 47.6 - knee
+    p = Pen((-6, -3, 8, L + 1.5), ppu)
+    skin = s["skin"] if not back else shade(s["skin"], -0.08)
+    p.circle(0.1, 0.0, lw * 0.44, fill=skin)
+    p.poly(limb((0.1, 0.0), (0.6, L - 4.2), lw * 0.84, lw * 0.56), fill=skin)
+    p.poly([(-lw * 0.42, 2.0), (-lw * 0.64, 7.0), (-lw * 0.3, 12.0)], fill=skin, smooth=True)
+    y = L - 5.8
+    p.poly(limb((-lw * 0.33, y), (lw * 0.38, y), 0.9, 0.9), fill=s["metal"])
+    for k in range(4):
+        p.circle(-lw * 0.28 + k * lw * 0.22, y + 1.1, 0.3, fill=s["metal"])
+    foot = [(-1.9, L - 4.6), (1.4, L - 4.2), (4.4, L - 2.6), (5.9, L - 0.9), (5.4, L), (-1.7, L), (-2.4, L - 2.0)]
+    p.poly(foot, fill=skin, smooth=True)
+    if s.get("female"):
+        p.line([(-1.9, L - 0.4), (5.4, L - 0.4)], "#c4362a", 0.4)
+    p.line([(3.4, L - 1.0), (4.4, L - 0.4)], shade(skin, -0.4), 0.12)
+    p.rivet(0.1, 0.0, 0.62)
+    return fin(p, seed=7 + back)
 
 
 def build_lap(s, b, ppu):
@@ -325,7 +353,7 @@ def build_lap(s, b, ppu):
     p.line([(-w + 0.2, 8.6), (w - 0.2, 8.6)], s["metal"], 0.5)
     p.rivet(-w + 2.4, 6.4, 0.55)
     p.rivet(w - 2.0, 6.4, 0.55)
-    return p.finish(seed=6)
+    return fin(p, seed=6)
 
 
 def build_skirt(s, b, ppu):
@@ -349,7 +377,7 @@ def build_skirt(s, b, ppu):
     p.poly(foot, fill=skin, smooth=True)
     p.line([(1.2, 47.2), (7.2, 47.2)], "#c4362a", 0.4)
     p.poly(limb((1.6, 44.4), (4.0, 44.4), 0.7, 0.7), fill=s["metal"])
-    return p.finish(seed=7)
+    return fin(p, seed=7)
 
 
 def build_serpent_tail(s, b, ppu):
@@ -366,7 +394,7 @@ def build_serpent_tail(s, b, ppu):
         x, y = path[i]
         w = 13.0 * (1 - i / n) + 1.4
         p.line([(x - w * 0.18, y), (x + w * 0.18, y)], "#e8d8a0", 0.6)
-    return p.finish(seed=8)
+    return fin(p, seed=8)
 
 
 def build_fish_tail(s, b, ppu):
@@ -379,7 +407,7 @@ def build_fish_tail(s, b, ppu):
     p.poly(fin, fill=shade(c, 0.15), smooth=True)
     for k in range(5):
         p.line([(1.4, 36.0), (4.0 + k * 2.6, 46.0 - k * 0.6)], shade(c, -0.3), 0.18)
-    return p.finish(seed=9)
+    return fin(p, seed=9)
 
 
 def build_tail(s, ppu):
@@ -399,7 +427,7 @@ def build_tail(s, ppu):
         p.line([(x - math.sin(a) * w / 2, y + math.cos(a) * w / 2), (x + math.sin(a) * w / 2, y - math.cos(a) * w / 2)],
                shade(c, -0.35), 0.22)
     p.rivet(0, 0, 0.6)
-    return p.finish(seed=10)
+    return fin(p, seed=10)
 
 
 def build_wing(s, ppu):
@@ -415,7 +443,7 @@ def build_wing(s, ppu):
     p.poly([(0, 0), (-6, -10), (-14, -18), (-10, -8), (-4, -3)], fill=c2, smooth=True)
     p.pattern([(0, 0), (-6, -10), (-14, -18), (-10, -8), (-4, -3)], "scales", shade(c2, -0.35), 1.2, 0.35, smooth=True)
     p.rivet(0, 0, 0.7)
-    return p.finish(seed=11)
+    return fin(p, seed=11)
 
 
 def build_halo(s, ppu):
@@ -431,13 +459,13 @@ def build_halo(s, ppu):
     for k in range(24):
         a = math.radians(k * 15)
         p.circle(math.cos(a) * 11.2, math.sin(a) * 11.2, 0.35, fill="vermilion")
-    return p.finish(seed=12, inner=0.15, outline="ink", ow=0.2)
+    return fin(p, seed=12, inner=0.15, ow=0.3, bevel=0.1, rim=0.08)
 
 
 def build_head(s, ppu, scale=1.0):
     p = Pen((-17, -44, 17, 14), ppu * scale)
     draw_head(p, s)
-    return p.finish(seed=13)
+    return fin(p, seed=13)
 
 
 # =========================================================================== assembly
@@ -541,8 +569,11 @@ def build_character(spec: dict, ppu: float = 9.0, use_cache=True) -> Rig:
         rig.meta["legs"] = False
         rig.meta["seatable"] = False
     else:
-        rig.add(Part("leg_b", build_leg(s, b, ppu, back=True), "torso", (-2.6, 0.2), z=6, rest=3))
-        rig.add(Part("leg_f", build_leg(s, b, ppu), "torso", (2.8, 0.2), z=14, rest=-3))
+        kn = knee_of(s)
+        rig.add(Part("leg_b", build_thigh(s, b, ppu, back=True), "torso", (-2.6, 0.2), z=6, rest=3))
+        rig.add(Part("shin_b", build_shin(s, b, ppu, back=True), "leg_b", (0.3, kn + 0.4), z=5))
+        rig.add(Part("leg_f", build_thigh(s, b, ppu), "torso", (2.8, 0.2), z=14, rest=-3))
+        rig.add(Part("shin_f", build_shin(s, b, ppu), "leg_f", (0.3, kn + 0.4), z=13))
         rig.add(Part("waist", build_waist(s, b, ppu), "torso", (0.2, -2.2), z=16))
         rig.ground = 47.4
         rig.meta["legs"] = True

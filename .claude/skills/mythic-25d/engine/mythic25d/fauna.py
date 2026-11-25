@@ -11,7 +11,11 @@ from __future__ import annotations
 import math
 import pickle
 
-from .gfx import Pen, arc_pts, catmull, limb, rot
+from .gfx import CHAR_STYLE, Pen, arc_pts, catmull, limb, rot
+
+
+def fin(p, **kw):
+    return p.finish(**{**CHAR_STYLE, **kw})
 from .rig import Part, Rig
 from .util import code_version, CACHE_DIR, shade, stable_hash
 
@@ -114,40 +118,57 @@ def _q_body(sp, ppu):
         p.line(arc_pts(L * 0.5, -H * 0.4, 3.0, 4.0, 60, 160, 10), "gold", 0.4)
     p.rivet(L * 0.36, -H * 0.2, 0.9)
     p.rivet(-L * 0.36, -H * 0.2, 0.9)
-    return p.finish(seed=21)
+    return fin(p, seed=21)
 
 
-def _q_leg(sp, ppu, near=True, fore=True):
+def _knee(sp, fore):
+    return sp["leg"] * (0.47 if fore else 0.44)
+
+
+def _q_leg_upper(sp, ppu, near=True, fore=True):
+    """Shoulder/hip -> knee: a broad rounded cut-out piece (like the reference Nandi)."""
     leg, lw = sp["leg"], sp["lw"]
+    kn = _knee(sp, fore)
     c = sp["color"] if near else shade(sp["color"], -0.16)
-    p = Pen((-lw * 1.6, -lw, lw * 1.8, leg + lw * 1.2), ppu)
+    p = Pen((-lw * 1.6, -lw * 1.2, lw * 1.6, kn + lw), ppu)
+    top = lw * (1.25 if sp.get("foot") != "pad" else 1.05)
+    pts = [(-top * 0.55, -lw * 0.5), (top * 0.55, -lw * 0.5), (lw * 0.62, kn * 0.55), (lw * 0.45, kn + lw * 0.3),
+           (-lw * 0.45, kn + lw * 0.3), (-lw * 0.6, kn * 0.55)]
+    p.poly(pts, fill=c, smooth=True, n=6)
+    p.line(arc_pts(0, kn * 0.35, lw * 0.4, kn * 0.25, 200, 340, 8), shade(c, -0.3), 0.18)
+    p.rivet(0, 0, min(0.95, lw * 0.24), color="#d8d2c4" if not sp.get("cloth") else "gold")
+    return fin(p, seed=22 + near + fore * 2)
+
+
+def _q_leg_lower(sp, ppu, near=True, fore=True):
+    """Knee -> hoof/paw (pivot at the knee rivet)."""
+    leg, lw = sp["leg"], sp["lw"]
+    kn = _knee(sp, fore)
+    L = leg - kn
+    c = sp["color"] if near else shade(sp["color"], -0.16)
+    p = Pen((-lw * 1.4, -lw * 0.8, lw * 1.8, L + lw * 1.2), ppu)
     foot = sp.get("foot", "hoof")
-    if foot == "pad":  # elephant / camel pillars
-        p.poly(limb((0, 0), (0, leg), lw, lw * 0.92), fill=c)
-        p.ellipse(0.2, leg + 0.2, lw * 0.56, lw * 0.22, fill=shade(c, 0.1))
+    if foot == "pad":
+        p.poly(limb((0, 0), (0, L), lw * 0.95, lw * 0.92), fill=c)
+        p.ellipse(0.2, L + 0.2, lw * 0.56, lw * 0.22, fill=shade(c, 0.1))
         for k in range(3):
-            p.circle(-lw * 0.28 + k * lw * 0.28 + 0.3, leg + 0.1, lw * 0.1, fill="#efe6d0")
-        if sp.get("anklet", True) and sp.get("head") == "elephant":
-            p.poly(limb((-lw * 0.5, leg * 0.8), (lw * 0.5, leg * 0.8), 1.0, 1.0), fill="gold")
+            p.circle(-lw * 0.28 + k * lw * 0.28 + 0.3, L + 0.1, lw * 0.1, fill="#efe6d0")
+        if sp.get("head") == "elephant":
+            p.poly(limb((-lw * 0.5, L * 0.62), (lw * 0.5, L * 0.62), 1.0, 1.0), fill="gold")
     else:
-        knee = leg * (0.45 if fore else 0.42)
-        bend = 1 if fore else -1
-        pts = catmull([(0, 0), (bend * -0.4, knee * 0.6), (bend * 0.5, knee), (bend * -0.2, leg * 0.8), (0.2, leg)],
-                      False, 6)
-        for i in range(len(pts) - 1):
-            w = lw * (1.0 - 0.45 * i / len(pts))
-            p.poly(limb(pts[i], pts[i + 1], w, w * 0.97), fill=c)
+        p.circle(0, 0, lw * 0.42, fill=c)
+        p.poly(limb((0, 0), (0.15, L - 0.6), lw * 0.72, lw * 0.5), fill=c)
         if foot == "hoof":
-            p.poly([(-lw * 0.36, leg - 0.6), (lw * 0.5, leg - 0.6), (lw * 0.6, leg + 1.4), (-lw * 0.4, leg + 1.4)],
-                   fill="#3a2a20")
+            p.poly([(-lw * 0.36, L - 0.8), (lw * 0.5, L - 0.8), (lw * 0.62, L + 1.4), (-lw * 0.4, L + 1.4)], fill="#3a2a20")
         else:
-            p.ellipse(lw * 0.4, leg + 0.4, lw * 0.62, lw * 0.34, fill=c)
+            p.ellipse(lw * 0.4, L + 0.4, lw * 0.62, lw * 0.34, fill=c)
             for k in range(3):
-                p.line([(lw * 0.2 + k * 0.4, leg + 0.1), (lw * 0.3 + k * 0.4, leg + 0.7)], INK, 0.12)
-        if not sp.get("no_bands") and near:
-            p.poly(limb((-lw * 0.4, leg * 0.78), (lw * 0.4, leg * 0.78), 0.5, 0.5), fill="gold" if sp.get("cloth") else shade(c, -0.25))
-    p.rivet(0, 0, min(0.9, lw * 0.22))
-    return p.finish(seed=22 + near + fore * 2)
+                p.line([(lw * 0.2 + k * 0.4, L + 0.1), (lw * 0.3 + k * 0.4, L + 0.7)], INK, 0.12)
+        if near:
+            p.poly(limb((-lw * 0.36, L * 0.7), (lw * 0.36, L * 0.7), 0.5, 0.5),
+                   fill="gold" if sp.get("cloth") else shade(c, -0.25))
+    p.rivet(0, 0, min(0.8, lw * 0.2), color="#d8d2c4" if not sp.get("cloth") else "gold")
+    return fin(p, seed=26 + near + fore * 2)
 
 
 def _ears(p, kind, x, y, c):
@@ -306,7 +327,7 @@ def _q_head(sp, ppu):
         p.ellipse(ex, ey, 0.8 * S, 0.5 * S, fill="#f6ecd6", outline=INK, w=0.14)
         p.circle(ex + 0.2 * S, ey, 0.28 * S, fill=INK)
     p.rivet(0, 0, 0.8)
-    return p.finish(seed=23)
+    return fin(p, seed=23)
 
 
 def _q_tail(sp, ppu):
@@ -344,7 +365,7 @@ def _q_tail(sp, ppu):
         if kind == "tuft":
             p.poly([(-2.6, 10.0), (-1.4, 10.0), (-0.8, 13.6), (-2.0, 14.6), (-3.4, 13.4)], fill="#3a2818", smooth=True)
     p.rivet(0, 0, 0.6)
-    return p.finish(seed=24)
+    return fin(p, seed=24)
 
 
 def resolve_animal(spec):
@@ -361,10 +382,10 @@ def build_quadruped(spec, ppu=9.0):
     rig.add(Part("body", _q_body(sp, ppu), None, (0, 0), z=10))
     shoulder_x, hip_x = L * 0.36, -L * 0.36
     leg_y = -H * 0.2
-    rig.add(Part("leg_ff", _q_leg(sp, ppu, near=False, fore=True), "body", (shoulder_x - 1.5, leg_y), z=2))
-    rig.add(Part("leg_hf", _q_leg(sp, ppu, near=False, fore=False), "body", (hip_x + 1.5, leg_y), z=2))
-    rig.add(Part("leg_fn", _q_leg(sp, ppu, near=True, fore=True), "body", (shoulder_x, leg_y), z=12))
-    rig.add(Part("leg_hn", _q_leg(sp, ppu, near=True, fore=False), "body", (hip_x, leg_y), z=12))
+    for name, near, fore, x, z in (("ff", False, True, shoulder_x - 1.5, 2), ("hf", False, False, hip_x + 1.5, 2),
+                                   ("fn", True, True, shoulder_x, 12), ("hn", True, False, hip_x, 12)):
+        rig.add(Part(f"leg_{name}", _q_leg_upper(sp, ppu, near, fore), "body", (x, leg_y), z=z + 1))
+        rig.add(Part(f"low_{name}", _q_leg_lower(sp, ppu, near, fore), f"leg_{name}", (0, _knee(sp, fore)), z=z))
     nx = L * 0.46 if sp["head"] != "elephant" else L * 0.42
     ny = -H * 0.45 if sp["head"] != "elephant" else -H * 0.4
     rig.add(Part("head", _q_head(sp, ppu), "body", (nx, ny), z=14 if sp["head"] != "elephant" else 15))
@@ -428,7 +449,7 @@ def _b_body(sp, ppu, flying=False):
     if sp.get("bat") or sp.get("butterfly"):
         p.ellipse(0, 0, 2.0, 1.0, fill=c)
         p.circle(2.2, -0.2, 0.9, fill=hc)
-        return p.finish(seed=31)
+        return fin(p, seed=31)
     body = [(4.0, -2.4), (0.0, -3.4), (-4.6, -2.0), (-7.0, 0.4), (-4.0, 3.0), (1.0, 3.4), (4.6, 1.6)]
     if sp.get("owl"):
         body = [(3.0, -4.0), (-1.0, -4.6), (-3.6, -1.0), (-3.4, 4.0), (0.0, 6.0), (3.2, 4.0), (4.0, 0.0)]
@@ -495,7 +516,7 @@ def _b_body(sp, ppu, flying=False):
     else:
         p.circle(hx + 0.4, hy - 0.3, 0.5, fill="#f6ecd6", outline=INK, w=0.1)
         p.circle(hx + 0.55, hy - 0.3, 0.26, fill=INK)
-    return p.finish(seed=32, ow=0.26)
+    return fin(p, seed=32, ow=0.44)
 
 
 def _b_wing(sp, ppu, far=False):
@@ -506,11 +527,11 @@ def _b_wing(sp, ppu, far=False):
         pts = [(0, 0), (-3, -6), (-7, -7), (-8, -4), (-5, -1), (-7, 2), (-4, 3), (0, 1)]
         p.poly(pts, fill=c, smooth=True)
         p.pattern(pts, "dots", "#2a2228", 1.4, 0.6, smooth=True)
-        return p.finish(seed=33, ow=0.2)
+        return fin(p, seed=33, ow=0.34)
     if sp.get("bat"):
         pts = [(0, 0), (-3, -6), (-8, -8), (-12, -6), (-10, -3), (-8, -2), (-6, 0), (-3, -1)]
         p.poly(pts, fill=c)
-        return p.finish(seed=33, ow=0.2)
+        return fin(p, seed=33, ow=0.34)
     pts = [(1.0, 0.2), (-1.4, -3.4), (-5.6, -7.0), (-11.4, -9.6), (-9.6, -6.6), (-12.0, -5.4), (-8.6, -3.4),
            (-10.0, -1.6), (-6.4, -0.6), (-6.8, 1.0), (-2.8, 1.4)]
     p.poly(pts, fill=c)
@@ -518,7 +539,7 @@ def _b_wing(sp, ppu, far=False):
     p.pattern([(1.0, 0.2), (-1.4, -3.4), (-5.6, -6.4), (-4.4, -2.4)], "scales", shade(c, -0.2), 1.0, 0.25)
     for k in range(5):
         p.line([(-3.0 - k * 1.6, -1.0 - k * 0.4), (-6.0 - k * 1.4, -4.0 - k * 1.0)], shade(c, -0.3), 0.14)
-    return p.finish(seed=33, ow=0.24)
+    return fin(p, seed=33, ow=0.41)
 
 
 def _b_tail(sp, ppu):
@@ -551,7 +572,7 @@ def _b_tail(sp, ppu):
         p.circle(0, 0, 0.1, fill=c)
     else:
         p.poly([(0.6, -0.8), (-4.0, -1.4), (-4.6, 0.6), (0.6, 1.0)], fill=c, smooth=True)
-    return p.finish(seed=34, ow=0.24)
+    return fin(p, seed=34, ow=0.41)
 
 
 def build_bird(spec, ppu=9.0):
@@ -604,7 +625,7 @@ def build_serpent(spec, ppu=9.0):
         p.circle(cx + 0.8, cy - 1.0, 0.45, fill="#f2d36a")
         p.circle(cx + 0.9, cy - 1.0, 0.2, fill=INK)
         p.line([(cx + 2.6, cy + 0.2), (cx + 4.2, cy + 0.6), (cx + 4.8, cy + 0.2)], "#c8321f", 0.2)
-    spr = p.finish(seed=41)
+    spr = fin(p, seed=41)
     rig = Rig(spec.get("id", "naga"), ppu)
     rig.meta = {"spec": spec, "kind": "serpent", "scale": float(spec.get("scale", 1.0)) * 1.6}
     rig.add(Part("body", spr, None, (0, 0), z=10))
@@ -625,7 +646,7 @@ def build_fish(spec, ppu=9.0):
     p.poly([(0, -4), (-3, -7), (-5, -3.6)], fill=shade(c, 0.15))
     p.circle(6.4, -1.0, 0.9, fill="#f6ecd6", outline=INK, w=0.12)
     p.circle(6.6, -1.0, 0.45, fill=INK)
-    spr = p.finish(seed=42)
+    spr = fin(p, seed=42)
     rig = Rig(spec.get("id", "fish"), ppu)
     rig.meta = {"spec": spec, "kind": "fish", "scale": float(spec.get("scale", 1.0)) * 1.6}
     rig.add(Part("body", spr, None, (0, 0), z=10))

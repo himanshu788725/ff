@@ -31,7 +31,7 @@ from .puppet import build_character
 from .rig import draw_strings
 from .util import clamp, ease_in_out, lerp, mix, rgb, rng, shade, smooth, EASES
 
-CHAR_HEIGHT = 0.56  # rig unit -> stage unit factor (100 rig units ~ 56% of a 16:9 frame)
+CHAR_HEIGHT = 0.6   # rig unit -> stage unit factor (100 rig units ~ 60% of a 16:9 frame)
 
 
 # =========================================================================== camera
@@ -311,6 +311,43 @@ def _ppu_bucket(need):
 LAYER_PAR = {"sky": 0.08, "far": 0.28, "mid": 0.55, "set": 0.82, "ground": 1.0, "front": 1.3}
 
 
+def pop_light(canvas, light_col, H, glow=0.0, ambient=False, night=False, fade=1.0, depth=1.0):
+    """The reference's 'lit puppet' look: a wide warm aura + a bright tight rim around the
+    silhouette, light wrapping onto the edges, a saturation lift, and a soft drop shadow."""
+    from PIL import ImageEnhance
+    a = canvas.getchannel("A")
+    W_, H_ = canvas.size
+    k = (0.45 if ambient else 1.0) * fade * (1.0 if night else 0.8)
+    col = rgb(light_col)[:3]
+    warm = tuple(int(c * 0.55 + v * 0.45) for c, v in zip(col, (255, 226, 170) if night else (255, 236, 200)))
+    out = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    # soft drop shadow on the backdrop (down-right)
+    sh = blur_alpha_fast(a, H * 0.009).point(lambda v: int(v * (0.32 if not night else 0.22) * (0.6 if ambient else 1)))
+    sl = Image.new("RGBA", canvas.size, (18, 9, 3, 0))
+    sl.putalpha(sh)
+    out.alpha_composite(sl, (min(W_ - 1, int(H * 0.008)), min(H_ - 1, int(H * 0.006))))
+    # wide aura + tight rim glow
+    for rad, op in ((H * (0.03 + 0.03 * glow), 0.62 + 0.5 * glow), (H * 0.007, 0.95)):
+        g = blur_alpha_fast(a, rad, down=4 if rad > 8 else 2).point(lambda v, o=op * k: int(min(255, v * o * 1.5)))
+        gl = Image.new("RGBA", canvas.size, warm + (0,))
+        gl.putalpha(g)
+        out.alpha_composite(gl)
+    # puppet itself, slightly more saturated & brighter than the set
+    rgbp = canvas.convert("RGB")
+    rgbp = ImageEnhance.Color(rgbp).enhance(1.14 if not ambient else 1.0)
+    if depth >= 0.95 and not ambient:
+        rgbp = ImageEnhance.Brightness(rgbp).enhance(1.05)
+    # light wrap: backlight bleeding onto the silhouette edges
+    inner = ImageChops.subtract(a, blur_alpha_fast(a, H * 0.006, down=2))
+    wrap = Image.new("RGB", canvas.size, warm)
+    rgbp = Image.composite(Image.blend(rgbp, ImageChops.screen(rgbp, wrap), 0.55 * k), rgbp,
+                           inner.point(lambda v: min(255, int(v * 2.2))))
+    pup = rgbp.convert("RGBA")
+    pup.putalpha(a)
+    out.alpha_composite(pup)
+    return out
+
+
 def life_casts(life, dur, ground, water, seed=0):
     """Expand ambient-life specs into performer configs with actions spanning the shot."""
     import random as _r
@@ -502,13 +539,10 @@ class Performer:
             canvas = Image.blend(canvas, tint, fog)
             canvas.putalpha(a)
         night = light.get("time") in ("night", "cosmic", "fire")
-        glow_op = ((0.28 if not night else 0.18) + 0.7 * st.glow) * (0.45 if self.ambient else 1.0) * (1 - 0.7 * sil_k)
-        glow = None if sil else (light.get("light", "#ffe6a8"), glow_op, max(6, H * (0.012 + 0.02 * st.glow)))
-        shadow = None if sil else (H * 0.009, H * 0.006, (0.38 if not night else 0.25) * (0.6 if self.ambient else 1.0), H * 0.008)
         img = canvas
-        if glow or shadow:
-            from .gfx import drop_shadow_and_glow
-            img = drop_shadow_and_glow(canvas, shadow, glow)
+        if not sil:
+            img = pop_light(canvas, light.get("light", "#ffe6a8"), H, glow=st.glow, ambient=self.ambient,
+                            night=night, fade=1 - 0.75 * sil_k, depth=self.depth)
         if st.alpha < 0.999:
             img = img.copy()
             img.putalpha(img.getchannel("A").point(lambda v: int(v * st.alpha)))
@@ -595,6 +629,9 @@ class ShotRuntime:
         default_grade = {"night": "kathaa_night", "fire": "agni", "dusk": "rakt", "divine": "swarna", "cosmic": "neel",
                          "storm": "neel", "dawn": "prabhat"}.get(t_, "kathaa")
         self.grade = shot.get("grade") or default_grade
+        dim_default = {"night": 0.78, "cosmic": 0.8, "fire": 0.8, "dusk": 0.8, "storm": 0.78}.get(t_, 0.82)
+        self.bg_dim = float(self.light.get("bg_dim", dim_default))
+        self.bg_desat = float(self.light.get("bg_desat", 0.8))
 
     # ------------------------------------------------------------------
     def camera(self, t, cam_dx=0.0):
@@ -704,6 +741,8 @@ class ShotRuntime:
         drawn_perf = False
         for name, par, img in self.env.layers:
             if name == "front" and not drawn_perf:
+                frame = self._dim_set(frame)
+                self._flames(frame, t, cam)
                 self._actors(frame, t, cam, sil_k)
                 for spr, x, y in self.extra_layers.get("over", []):
                     sx, sy, ez = to_screen(x, y, cam, 1.0, W, H)
@@ -729,8 +768,9 @@ class ShotRuntime:
                 for spr, x, y in self.extra_layers.get("ground", []):
                     sx, sy, ez = to_screen(x, y, cam, 1.0, W, H)
                     affine_paste(frame, spr, sx, sy, 0, ez, ez)
-                self._flames(frame, t, cam)
         if not drawn_perf:
+            frame = self._dim_set(frame)
+            self._flames(frame, t, cam)
             self._actors(frame, t, cam, sil_k)
             for spr, x, y in self.extra_layers.get("over", []):
                 sx, sy, ez = to_screen(x, y, cam, 1.0, W, H)
@@ -739,6 +779,19 @@ class ShotRuntime:
             sx, sy, ez = to_screen(x, y, cam, 1.3, W, H)
             affine_paste(frame, spr, sx, sy, 0, ez, ez)
         return self._light(frame, t, sil_k)
+
+    def _dim_set(self, frame):
+        """Push the set back: dimmer, less saturated and softer than the lit puppets (reference look)."""
+        k = self.bg_dim
+        if k >= 0.995 and self.bg_desat >= 0.995:
+            return frame
+        from PIL import ImageEnhance
+        rgbf = frame.convert("RGB")
+        if self.bg_desat < 0.995:
+            rgbf = ImageEnhance.Color(rgbf).enhance(self.bg_desat)
+        if k < 0.995:
+            rgbf = Image.eval(rgbf, lambda v, kk=k: int(v * kk))
+        return rgbf.convert("RGBA")
 
     def _actors(self, frame, t, cam, sil_k=0.0):
         for p in self.performers:

@@ -84,7 +84,8 @@ shots: [...]
   life: [{who: deer, mode: run_across, depth: 0.6}]   # extra background creatures; `life: false` = none
   sfx: [{name: conch, at: 0.3, vol: -6}, {name: war_drums, at: 1, vol: -14, dur: 5}]
   shloka: {...}                 # verse card, see below
-  light: {spot: [0.5, 0.42], spot_color: "#ffcf8a", vignette: 0.7, rays: 0.5, haze_k: 0.2, amb: 0.9}
+  light: {spot: [0.5, 0.42], spot_color: "#ffcf8a", vignette: 0.7, rays: 0.5, haze_k: 0.2, amb: 0.9,
+          bg_dim: 0.8, bg_desat: 0.8}     # bg_*: how much the set is pushed back behind the lit puppets
 ```
 
 ### cast member

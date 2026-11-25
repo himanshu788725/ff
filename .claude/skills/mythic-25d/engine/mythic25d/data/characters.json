@@ -4669,21 +4669,22 @@
   "cat": "ramayana_rakshasa",
   "kind": "humanoid",
   "build": "giant",
-  "crown": "spiky",
+  "crown": "kirita",
   "fangs": false,
-  "eye": "round",
+  "eye": "almond",
   "angry": true,
   "mustache": "big",
   "dhoti": [
-   "maroon",
-   "scales",
-   "gold"
+   "#3f9a4a",
+   "dots",
+   "cream"
   ],
-  "sash": null,
+  "sash": "mustard",
   "items": {
-   "f": "khadga"
+   "f": "khadga",
+   "b": "dhal"
   },
-  "skin": "#5a4a6a",
+  "skin": "#c4532c",
   "heads": [
    "human",
    "human",
@@ -4695,10 +4696,16 @@
    "human",
    "human"
   ],
-  "arms": 4,
+  "arms": 10,
   "extra_items": [
    "trishul",
-   "bow"
+   "bow",
+   "gada",
+   "chakra",
+   "parashu",
+   "shakti",
+   "arrow",
+   "vajra"
   ]
  },
  {

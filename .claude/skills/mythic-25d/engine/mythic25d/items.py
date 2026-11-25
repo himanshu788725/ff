@@ -309,5 +309,6 @@ def build_item(name, ppu, finish_kw=None):
     fn, bounds, world, off = ITEMS[name]
     pen = Pen(bounds, ppu)
     fn(pen)
-    spr = pen.finish(ow=0.22, inner=0.22, texture=0.7, **(finish_kw or {}))
+    from .gfx import ITEM_STYLE
+    spr = pen.finish(**{**ITEM_STYLE, **(finish_kw or {})})
     return spr, world, off

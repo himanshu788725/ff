@@ -83,6 +83,9 @@ def a_walk(st, lt, a, rig, ctx):
             if rig.meta.get("legs", True):
                 st.add("leg_f", -amp * math.sin(ph) * w)
                 st.add("leg_b", amp * math.sin(ph) * w)
+                kb = 34 if run else 26           # knee bends while the leg swings forward
+                st.add("shin_f", kb * max(0.0, math.sin(ph)) * w)
+                st.add("shin_b", kb * max(0.0, -math.sin(ph)) * w)
             st.add("ua_f", 8 * math.sin(ph) * w)
             st.add("ua_b", -10 * math.sin(ph) * w)
             st.dy -= abs(math.sin(ph)) * (2.6 if run else 1.6) * w   # the puppet hop
@@ -94,6 +97,11 @@ def a_walk(st, lt, a, rig, ctx):
             st.add("leg_hf", -amp * s * w)
             st.add("leg_ff", amp * s * w)
             st.add("leg_hn", amp * s * w)
+            kb = 40 if run else 28              # fore knees fold back, hocks fold forward while lifting
+            st.add("low_fn", kb * max(0.0, s) * w)
+            st.add("low_ff", kb * max(0.0, -s) * w)
+            st.add("low_hf", -kb * max(0.0, s) * w)
+            st.add("low_hn", -kb * max(0.0, -s) * w)
             st.add("head", 4 * math.sin(2 * ph) * w)
             st.add("tail", 10 * math.sin(ph) * w)
             st.dy -= abs(math.sin(ph)) * (2.0 if run else 0.8) * w
@@ -271,6 +279,8 @@ def a_fly(st, lt, a, rig, ctx):
             st.set("ua_b", 30, w)
             st.set("leg_f", 18, w)
             st.set("leg_b", 30, w)
+            st.set("shin_f", 30, w)
+            st.set("shin_b", 40, w)
             st.dy -= lift * arc + 2 * math.sin(lt * 4)
         elif kind == "bird":
             fl = math.sin(lt * a.get("flap", 11.0))
@@ -307,6 +317,8 @@ def a_jump(st, lt, a, rig, ctx):
             st.x = lerp(a.get("_from", st.x), a["to"], ease_in_out(k))
         st.add("leg_f", -20 * math.sin(math.pi * k))
         st.add("leg_b", 20 * math.sin(math.pi * k))
+        st.add("shin_f", 35 * math.sin(math.pi * k))
+        st.add("shin_b", 35 * math.sin(math.pi * k))
     elif lt > dur and "to" in a:
         st.x = a["to"]
 
@@ -493,6 +505,8 @@ def a_rear(st, lt, a, rig, ctx):
         st.rot -= 28 * w
         st.add("leg_fn", -50 * w)
         st.add("leg_ff", -40 * w)
+        st.add("low_fn", 60 * w)
+        st.add("low_ff", 50 * w)
         st.add("head", -15 * w)
 
 
@@ -597,6 +611,6 @@ def evaluate(rig, x0, face0, mode0, actions, t, seed=0.0):
     # mode-dependent visibility
     if rig.meta.get("kind") == "humanoid":
         if st.mode in ("seated",) and "lap" in rig.parts:
-            st.hidden |= {"leg_f", "leg_b", "waist", "skirt"}
+            st.hidden |= {"leg_f", "leg_b", "shin_f", "shin_b", "waist", "skirt"}
             st.show |= {"lap"}
     return st

@@ -8,7 +8,8 @@ description: Make painted 2.5D Indian-mythology puppet-theatre films (kathputli 
 Everything runs from one CLI: `python <SKILL_DIR>/mythic.py <command>` (SKILL_DIR = the folder this file is in;
 in this repo `.claude/skills/mythic-25d`). Projects live in `./mythic_projects/<name>/`.
 
-The look (match it — see `references/art-direction.md`): flat folk-painted cut-paper puppets with rivet joints and
+The look (match it — see `references/art-direction.md`): bevelled, thick-outlined folk-painted cut-paper puppets
+with segmented limbs and rivet joints that glow against a dimmer set (they pop out — 2.5D, not flat 2D), and
 thin strings to the fly-bar, tall stacked gold mukut with a red plume, Kalamkari dotted trees/banana groves,
 props hanging on strings (scalloped clouds, rayed sun, crescent moon), warm lamp-lit stage with heavy vignette,
 drifting haze, dust motes, god-rays, film grain; red velvet curtain intro/outro with diya footlights and audience
@@ -74,6 +75,8 @@ Render only some shots: `mythic.py render <proj> --shots s3,s4`.
   `actions.py`, `grade.py`); caches rebuild automatically when code changes.
 - Pose sheet of any character: `mythic.py char hanuman`; gallery: `mythic.py gallery --cat devi`;
   environment preview: `mythic.py env kurukshetra_dusk`; LUTs for Resolve/Premiere: `mythic.py lut all`.
+
+Human-readable bilingual manual: `docs/Mythic25D_Manual.pdf` (rebuild with `engine/tools/make_manual.py`).
 
 ## References (read when needed)
 

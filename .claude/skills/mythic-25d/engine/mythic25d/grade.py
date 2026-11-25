@@ -15,8 +15,8 @@ from PIL import Image, ImageEnhance
 GRADES = {
     "kathaa": dict(desc="Reference look: warm aged-paper puppet theatre, brown shadows, creamy highlights",
                    contrast=0.42, gamma=(0.98, 1.0, 1.06), lift=(30, 18, 10), gain=(255, 240, 214), sat=0.86),
-    "kathaa_night": dict(desc="Night puppet stage: deep indigo shadows, warm lamp highlights",
-                         contrast=0.45, gamma=(1.05, 1.02, 0.96), lift=(10, 12, 26), gain=(250, 236, 214), sat=0.82),
+    "kathaa_night": dict(desc="Night puppet stage: warm dark-brown shadows, glowing lamp-lit puppets",
+                         contrast=0.42, gamma=(0.97, 1.0, 1.06), lift=(16, 10, 8), gain=(255, 236, 206), sat=0.9),
     "agni": dict(desc="Fire / yagya / burning Lanka: hot oranges, crushed warm shadows",
                  contrast=0.5, gamma=(0.92, 1.02, 1.15), lift=(34, 12, 6), gain=(255, 232, 196), sat=1.05),
     "rakt": dict(desc="Battlefield dusk: blood-red sky, smoky browns",

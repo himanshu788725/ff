@@ -27,6 +27,8 @@ python .claude/skills/mythic-25d/mythic.py make mythic_projects/demo_hanuman_bhi
 
 Then open Claude Code here and paste a prompt from `.claude/skills/mythic-25d/STARTER_PROMPT.md` (or type `/mythic-25d`).
 Docs: `.claude/skills/mythic-25d/SKILL.md` and `references/`. Sample galleries: `.claude/skills/mythic-25d/docs/`.
+**PDF manual (Hindi + English, 26 pages):** `.claude/skills/mythic-25d/docs/Mythic25D_Manual.pdf`
+(regenerate: `python .claude/skills/mythic-25d/engine/tools/make_manual.py`).
 Portable package: `dist/mythic-25d-skill.zip` (see `INSTALL.md` inside) — rebuild with
 `python .claude/skills/mythic-25d/engine/tools/make_zip.py`.
 

@@ -447,8 +447,14 @@ class Pen:
         self.clipped(mask, draw)
 
     # -- finishing
-    def finish(self, outline="ink", ow=0.32, inner=0.30, texture=0.9, seed=0, glow_rim=0.0) -> Sprite:
-        """Down-sample + gouache texture + edge shading + cut-paper outline."""
+    def finish(self, outline="ink", ow=0.32, inner=0.30, texture=0.9, seed=0, glow_rim=0.0, inner_r=0.9,
+               bevel=0.0, rim=0.0) -> Sprite:
+        """Down-sample + gouache texture + edge shading + cut-paper outline.
+
+        inner/inner_r : darkening toward the cut edge (volume)  — strength / radius in units
+        bevel         : directional shade on the lower-right edges (light from upper-left)
+        rim           : light catching the upper-left edges (2.5D cut-out highlight)
+        """
         img = self.img
         if outline is not None and ow > 0:
             a = img.getchannel("A")
@@ -467,19 +473,41 @@ class Pen:
         if texture > 0:
             g = tile_to(grain_tile(256, 7 + seed % 5), w, h)
             arr[..., :3] *= (1 + (g[..., None] - 1) * texture * 1.6)
+        a8 = Image.fromarray((alpha * 255).astype(np.uint8), "L")
         if inner > 0:
-            r = max(1.0, 0.9 * self.ppu)
-            bl = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8), "L").filter(
-                ImageFilter.GaussianBlur(r)), np.float32) / 255.0
+            r = max(1.0, inner_r * self.ppu)
+            bl = np.asarray(a8.filter(ImageFilter.GaussianBlur(r)), np.float32) / 255.0
             edge = np.clip((alpha - bl) * 2.2, 0, 1)
             arr[..., :3] *= (1 - inner * edge[..., None])
             # soft top-left light, like a lamp above the stage
             yy = np.linspace(1, 0, h, dtype=np.float32)[:, None]
             arr[..., :3] *= (0.94 + 0.10 * yy[..., None])
+        if bevel > 0 or rim > 0:
+            sh = max(1, int(round(0.7 * self.ppu)))
+            soft = max(1.0, 0.8 * self.ppu)
+
+            def shifted(dx, dy):
+                m = np.zeros_like(alpha)
+                ys, ye = max(0, dy), h + min(0, dy)
+                xs, xe = max(0, dx), w + min(0, dx)
+                m[ys - dy:ye - dy, xs - dx:xe - dx] = alpha[ys:ye, xs:xe]
+                return np.asarray(Image.fromarray((m * 255).astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(soft)),
+                                  np.float32) / 255.0
+            if bevel > 0:     # p near the lower-right edge  <=> alpha(p + s) is low
+                dark = alpha * (1 - shifted(sh, sh))
+                arr[..., :3] *= (1 - bevel * np.clip(dark * 1.6, 0, 1)[..., None])
+            if rim > 0:       # p near the upper-left edge  <=> alpha(p - s) is low
+                lit = alpha * (1 - shifted(-sh, -sh))
+                arr[..., :3] += rim * 255 * np.clip(lit * 1.6, 0, 1)[..., None] * np.array([1.0, 0.94, 0.8])
         arr[..., :3] = np.clip(arr[..., :3], 0, 255)
         out = Image.fromarray(arr.astype(np.uint8), "RGBA")
         px, py = -self.x0 * self.ppu, -self.y0 * self.ppu
         return Sprite(out, px, py)
+
+
+# finishing presets: puppets are thicker-lined, bevelled cut-outs that read as 2.5D
+CHAR_STYLE = dict(outline="#170d07", ow=0.58, inner=0.34, inner_r=1.5, bevel=0.2, rim=0.13, texture=0.8)
+ITEM_STYLE = dict(outline="#170d07", ow=0.42, inner=0.26, inner_r=0.9, bevel=0.16, rim=0.12, texture=0.6)
 
 
 # =========================================================================== compositing

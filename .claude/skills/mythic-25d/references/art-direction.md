@@ -19,6 +19,21 @@
   story-within-a-story.
 - **Finish**: film grain, slight lamp flicker, gentle sharpening (done at master).
 
+## Why the puppets pop (2.5D, not flat 2D) — built into every render
+
+1. **Thick dark cut-paper outline** around every separate limb piece (`gfx.CHAR_STYLE`: ow 0.58 units), so
+   overlapping segments read as layered paper.
+2. **Volume shading** on each piece: edges darken (inner), lower-right edges shade (bevel), upper-left edges
+   catch light (rim) — a bevelled, painted cut-out instead of flat fill.
+3. **Segmented limbs with rivets**: upper arm / forearm / hand-prop, thigh (dhoti) / shin+foot for people,
+   upper leg / lower leg+hoof for animals, each pinned at a rivet; knees bend when walking.
+4. **Lit puppet against a dim set** (`render.pop_light`): wide warm aura + bright tight rim glow around the
+   silhouette, light wrap on the edges, +14 % saturation; the set behind is dimmed (≈0.8) and desaturated (0.8).
+5. **Warm darkness**: nights are dark warm browns (not blue), with lamp-lit puppets.
+
+Tune per shot: `light: {bg_dim: 0.75, bg_desat: 0.7}` for more pop, `bg_dim: 0.95` for a brighter set.
+Edit `CHAR_STYLE` in `engine/mythic25d/gfx.py` to change outline thickness / bevel globally.
+
 ## Palette (named colours usable everywhere)
 
 ochre `ochre` · mustard `mustard` · saffron `saffron` · vermilion `vermilion` · maroon `maroon` · indigo
@@ -43,7 +58,7 @@ ochre `ochre` · mustard `mustard` · saffron `saffron` · vermilion `vermilion`
 | Lakshmi | red saree, lotus, gold coins (kalash), elephants, owl |
 | Rishis | old build, white beard, jata, valkal, rudraksha, danda + kamandalu |
 | Rakshasas | dark skins, round eyes, fangs, horns/spiky crown, big moustache, giant build |
-| Ravana | ten heads (main + 9), 4+ arms, sword |
+| Ravana | ten heads (main + 9), burnt-orange skin, green dotted dhoti, ten arms of weapons |
 
 ## Composition
 
