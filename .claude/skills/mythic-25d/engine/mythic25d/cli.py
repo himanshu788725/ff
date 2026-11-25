@@ -350,9 +350,10 @@ def cmd_master(a):
     name = re.sub(r"[^\w\-]+", "_", proj.name)
     out = proj / "out" / f"{name}_{a.quality}.mp4"
     master(raw, audio if audio.exists() else None, ass, out, burn_subs=not a.no_burn,
-           preset="slow" if a.quality == "final" else "veryfast", crf=18 if a.quality == "final" else 23)
+           preset="medium" if a.quality == "final" else "veryfast", crf=19 if a.quality == "final" else 23)
     if a.quality == "final" and not a.no_burn:
-        master(raw, audio if audio.exists() else None, None, proj / "out" / f"{name}_clean.mp4", burn_subs=False)
+        master(raw, audio if audio.exists() else None, None, proj / "out" / f"{name}_clean.mp4", burn_subs=False,
+               preset="medium", crf=19)
     print(f"[master] wrote {out}")
     return out
 

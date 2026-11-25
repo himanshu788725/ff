@@ -93,10 +93,10 @@ shots:
     props:
       - {name: chariot, x: 0.45, layer: over, s: 2.0, emblem: hanuman, flag: mustard}
     cast:
-      - {who: white_horse, id: horse1, x: 0.8, face: right, scale: 1.45, depth: 0.96, actions: [{do: rear, at: 1.0, dur: 1.4}]}
-      - {who: white_horse, id: horse2, x: 0.86, face: right, scale: 1.45, actions: [{do: graze, at: 2.5, dur: 2}]}
-      - {who: krishna, x: 0.52, y: 0.74, face: right, actions: [{do: bless, at: 1.5, dur: 3}]}
-      - {who: arjuna, x: 0.36, y: 0.74, face: right, actions: [{do: raise, at: 2.0, dur: 2.5}]}
+      - {who: white_horse, id: horse1, x: 0.79, face: right, scale: 0.78, depth: 0.96, actions: [{do: rear, at: 1.0, dur: 1.4}]}
+      - {who: white_horse, id: horse2, x: 0.86, face: right, scale: 0.78, actions: [{do: graze, at: 2.5, dur: 2}]}
+      - {who: krishna, x: 0.6, y: 0.705, face: right, actions: [{do: bless, at: 1.5, dur: 3}]}
+      - {who: arjuna, x: 0.47, y: 0.705, face: right, actions: [{do: raise, at: 2.0, dur: 2.5}]}
     fx: [dust, "flash@3.6"]
     sfx:
       - {name: conch, at: 0.3, vol: -6}

@@ -83,7 +83,7 @@ def write_cube(name, path, size=33):
     return path
 
 
-def ffmpeg_finish_filter(grain=10, sharpen=0.35, flicker=0.012):
+def ffmpeg_finish_filter(grain=6, sharpen=0.3, flicker=0.012):
     """Film finish used at master: temporal grain, gentle sharpen, lamp flicker."""
     parts = []
     if flicker > 0:

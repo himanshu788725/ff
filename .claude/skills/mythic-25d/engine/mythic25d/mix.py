@@ -198,8 +198,16 @@ def master(video_raw: Path, audio: Path | None, ass: Path | None, out: Path, fin
     cmd = ["ffmpeg", "-y", "-v", "error", "-stats", "-i", str(video_raw)]
     if audio and Path(audio).exists():
         cmd += ["-i", str(audio)]
-    cmd += ["-vf", ",".join(vf), "-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-pix_fmt", "yuv420p",
-            "-movflags", "+faststart"]
+    # bitrate cap keeps grain from exploding file size (~14 Mbps at 1080p30, scales with pixels)
+    pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                         "-of", "csv=p=0", str(video_raw)], capture_output=True, text=True).stdout.strip().split(",")
+    try:
+        px = int(pr[0]) * int(pr[1])
+    except (ValueError, IndexError):
+        px = 1920 * 1080
+    mbps = max(3.0, 14.0 * px / (1920 * 1080))
+    cmd += ["-vf", ",".join(vf), "-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-maxrate", f"{mbps:.1f}M",
+            "-bufsize", f"{mbps * 2:.1f}M", "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
     if audio and Path(audio).exists():
         cmd += ["-map", "0:v:0", "-map", "1:a:0", "-c:a", "aac", "-b:a", "192k", "-shortest"]
     cmd += [str(out)]

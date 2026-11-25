@@ -28,8 +28,8 @@ exposure), `rays` (god-rays 0–1), `haze_k` (drifting haze strength). Example d
 
 ## Film finish (master)
 
-`grade.ffmpeg_finish_filter(grain=10, sharpen=0.35, flicker=0.012)` adds lamp flicker (two slow sines on
-brightness), unsharp 0.35, temporal luma/chroma grain. Increase grain to 14 for a more 16 mm feel; set flicker 0
+`grade.ffmpeg_finish_filter(grain=6, sharpen=0.3, flicker=0.012)` adds lamp flicker (two slow sines on
+brightness), unsharp 0.3, temporal luma/chroma grain; master caps bitrate at ~14 Mbps (1080p). Increase grain to 10 for a more 16 mm feel; set flicker 0
 for a cleaner look.
 
 ## LUTs for other software
