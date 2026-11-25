@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  mythic25d storyboard  —  painted 2.5D kathputli / puppet-theatre film
+#  Full field reference: references/storyboard-schema.md
+#  Look up ids:  mythic.py list chars | envs | actions | moods | sfx   ·  mythic.py search हनुमान
+# ─────────────────────────────────────────────────────────────────────────────
+title: "__TITLE__"
+format: "16:9"            # 16:9 (YouTube) | 9:16 (Shorts/Reels) | 1:1 | 4:5
+fps: 30
+grade: auto               # auto (per scene time-of-day) | kathaa | kathaa_night | agni | rakt | neel | swarna | smriti | prabhat | van
+voice:
+  engine: edge            # edge (free Hindi neural TTS, word-timed) | files (your recordings) | none
+  narrator: hi-IN-MadhurNeural
+  rate: "-6%"
+  pitch: "-2Hz"
+  cast:                   # optional per-character voices
+    # bhima: {voice: hi-IN-MadhurNeural, rate: "-8%", pitch: "-10Hz"}
+music: {mood: devotional, volume_db: -17}   # or {file: music/my_track.mp3}
+subtitles:
+  style: karaoke          # karaoke | keyword | pop | line
+  highlight: "#f2c94a"    # active word
+  keyword: "#9fe0c8"      # names (keyword style + spoken names in karaoke)
+intro: {curtain: true, title: "__TITLE__", subtitle: "एक पौराणिक कथा", label: "कथा ↗ भाग १"}
+outro: {curtain: true, text: "॥ जय श्री राम ॥", subtitle: "कथा जारी रहेगी…"}
+
+shots:
+  - id: s1
+    env: forest_banana_dawn
+    camera: {move: push_in}
+    narration: "बहुत समय पहले, गंधमादन पर्वत के केले के वन में, पवनपुत्र हनुमान ध्यान में बैठे थे।"
+    highlight: [गंधमादन, पवनपुत्र]
+    cast:
+      - {who: hanuman, x: 0.42, pose: meditate}
+    fx: [dust]
+
+  - id: s2
+    env: forest_banana_day
+    camera: {move: pan_right}
+    narration: "उसी मार्ग से महाबली भीम आ रहे थे।"
+    lines:
+      - {who: bhima, text: "हे वानर! मार्ग से अपनी पूँछ हटाओ।"}
+    cast:
+      - {who: hanuman, x: 0.3, pose: seated, face: right}
+      - {who: bhima, x: 1.15, face: left, actions: [{do: walk, to: 0.7, at: 0.2, dur: 2.6}, {do: point, at: 3.2, dur: 2.5}]}

@@ -1,0 +1,18 @@
+# mythic25d storyboard — vertical Shorts/Reels (9:16). Keep it 30–55 s, 4–7 shots, a hook in shot 1.
+title: "__TITLE__"
+format: "9:16"
+fps: 30
+grade: auto
+voice: {engine: edge, narrator: hi-IN-MadhurNeural, rate: "-2%"}
+music: {mood: epic_battle, volume_db: -16}
+subtitles: {style: pop, pop_words: 1}
+intro: {curtain: false}
+outro: {curtain: false}
+shots:
+  - id: hook
+    env: kurukshetra_dusk
+    camera: {move: push_in, from: 1.05, to: 1.25}
+    narration: "क्या आप जानते हैं, अर्जुन के रथ पर हनुमान क्यों विराजमान थे?"
+    cast:
+      - {who: arjuna, x: 0.5, actions: [{do: raise, at: 1.0, dur: 2}]}
+    fx: ["flash@0.2", dust]

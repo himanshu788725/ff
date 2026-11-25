@@ -1,0 +1,636 @@
+[
+ {
+  "id": "horse",
+  "hi": "घोड़ा",
+  "en": "Horse",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse"
+ },
+ {
+  "id": "white_horse",
+  "hi": "सफ़ेद घोड़ा",
+  "en": "White horse",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "cloth": "vermilion"
+ },
+ {
+  "id": "black_horse",
+  "hi": "काला घोड़ा",
+  "en": "Black horse",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "color": "#2a2420",
+  "mane_color": "#1a1410"
+ },
+ {
+  "id": "brown_horse",
+  "hi": "भूरा घोड़ा",
+  "en": "Brown horse",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "color": "#8a5a32"
+ },
+ {
+  "id": "chariot_horse",
+  "hi": "रथ का घोड़ा",
+  "en": "Chariot horse (caparisoned)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "cloth": "vermilion"
+ },
+ {
+  "id": "uchchaihshravas",
+  "hi": "उच्चैःश्रवा",
+  "en": "Uchchaihshravas (divine horse)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "cloth": "#f2c23a",
+  "scale": 1.2
+ },
+ {
+  "id": "devdatta",
+  "hi": "देवदत्त (कल्कि का घोड़ा)",
+  "en": "Devadatta (Kalki's horse)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "cloth": "#3a4a8a"
+ },
+ {
+  "id": "ashwamedha_horse",
+  "hi": "अश्वमेध का घोड़ा",
+  "en": "Ashvamedha horse",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "horse",
+  "cloth": "#f2c23a"
+ },
+ {
+  "id": "cow",
+  "hi": "गाय",
+  "en": "Cow",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "cow"
+ },
+ {
+  "id": "kamadhenu",
+  "hi": "कामधेनु",
+  "en": "Kamadhenu",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "cow",
+  "cloth": "#f2c23a",
+  "bells": true
+ },
+ {
+  "id": "nandini",
+  "hi": "नंदिनी",
+  "en": "Nandini (Vasishtha's cow)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "cow",
+  "bells": true
+ },
+ {
+  "id": "calf",
+  "hi": "बछड़ा",
+  "en": "Calf",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "cow",
+  "scale": 0.6
+ },
+ {
+  "id": "nandi",
+  "hi": "नंदी",
+  "en": "Nandi (Shiva's bull)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "bull",
+  "cloth": "vermilion",
+  "bells": true
+ },
+ {
+  "id": "bull",
+  "hi": "बैल",
+  "en": "Bull",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "bull"
+ },
+ {
+  "id": "buffalo",
+  "hi": "भैंस",
+  "en": "Buffalo",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "buffalo"
+ },
+ {
+  "id": "yama_buffalo",
+  "hi": "यम का भैंसा",
+  "en": "Yama's buffalo",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "buffalo",
+  "cloth": "#1e1e2a",
+  "bells": true
+ },
+ {
+  "id": "elephant",
+  "hi": "हाथी",
+  "en": "Elephant",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "elephant"
+ },
+ {
+  "id": "airavata",
+  "hi": "ऐरावत",
+  "en": "Airavata (white elephant)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "elephant",
+  "color": "#efece4",
+  "cloth": "#f2c23a"
+ },
+ {
+  "id": "war_elephant",
+  "hi": "युद्ध हाथी",
+  "en": "War elephant",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "elephant",
+  "cloth": "vermilion"
+ },
+ {
+  "id": "gajendra",
+  "hi": "गजेन्द्र",
+  "en": "Gajendra",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "elephant",
+  "color": "#9a9690"
+ },
+ {
+  "id": "baby_elephant",
+  "hi": "हाथी का बच्चा",
+  "en": "Baby elephant",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "elephant",
+  "scale": 0.55
+ },
+ {
+  "id": "lion",
+  "hi": "सिंह",
+  "en": "Lion",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "lion"
+ },
+ {
+  "id": "durga_lion",
+  "hi": "दुर्गा का सिंह",
+  "en": "Durga's lion",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "lion",
+  "cloth": "vermilion",
+  "scale": 1.15
+ },
+ {
+  "id": "tiger",
+  "hi": "बाघ",
+  "en": "Tiger",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "tiger"
+ },
+ {
+  "id": "durga_tiger",
+  "hi": "दुर्गा का व्याघ्र",
+  "en": "Durga's tiger",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "tiger",
+  "cloth": "vermilion"
+ },
+ {
+  "id": "leopard",
+  "hi": "तेंदुआ",
+  "en": "Leopard",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "leopard"
+ },
+ {
+  "id": "cheetah",
+  "hi": "चीता",
+  "en": "Cheetah",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "leopard",
+  "color": "#e8c070"
+ },
+ {
+  "id": "deer",
+  "hi": "हिरण",
+  "en": "Deer",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer"
+ },
+ {
+  "id": "golden_deer",
+  "hi": "स्वर्ण मृग (मारीच)",
+  "en": "Golden deer (Maricha)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer",
+  "color": "#f2c23a"
+ },
+ {
+  "id": "blackbuck",
+  "hi": "काला हिरण",
+  "en": "Blackbuck",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer",
+  "color": "#3a2a20",
+  "pattern": null,
+  "horns": "spiral"
+ },
+ {
+  "id": "musk_deer",
+  "hi": "कस्तूरी मृग",
+  "en": "Musk deer",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer",
+  "color": "#8a6a4a",
+  "horns": null
+ },
+ {
+  "id": "fawn",
+  "hi": "मृगछौना",
+  "en": "Fawn",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer",
+  "scale": 0.6,
+  "horns": null
+ },
+ {
+  "id": "dog",
+  "hi": "कुत्ता",
+  "en": "Dog",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "dog"
+ },
+ {
+  "id": "bhairava_dog",
+  "hi": "भैरव का श्वान",
+  "en": "Bhairava's dog",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "dog",
+  "color": "#1e1a18"
+ },
+ {
+  "id": "dharma_dog",
+  "hi": "धर्मराज का श्वान",
+  "en": "Yudhishthira's dog",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "dog",
+  "color": "#e8e0d0"
+ },
+ {
+  "id": "wolf",
+  "hi": "भेड़िया",
+  "en": "Wolf",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "wolf"
+ },
+ {
+  "id": "jackal",
+  "hi": "सियार",
+  "en": "Jackal",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "jackal"
+ },
+ {
+  "id": "fox",
+  "hi": "लोमड़ी",
+  "en": "Fox",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "jackal",
+  "color": "#c8642a"
+ },
+ {
+  "id": "boar",
+  "hi": "सूअर",
+  "en": "Boar",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "boar"
+ },
+ {
+  "id": "bear",
+  "hi": "भालू",
+  "en": "Bear",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "bear"
+ },
+ {
+  "id": "goat",
+  "hi": "बकरी",
+  "en": "Goat",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "goat"
+ },
+ {
+  "id": "ram",
+  "hi": "मेढ़ा",
+  "en": "Ram (Agni's vahana)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "ram"
+ },
+ {
+  "id": "camel",
+  "hi": "ऊँट",
+  "en": "Camel",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "camel"
+ },
+ {
+  "id": "donkey",
+  "hi": "गधा",
+  "en": "Donkey (Shitala's vahana)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "donkey"
+ },
+ {
+  "id": "rabbit",
+  "hi": "खरगोश",
+  "en": "Rabbit (moon rabbit)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "rabbit"
+ },
+ {
+  "id": "mooshak",
+  "hi": "मूषक (गणेश वाहन)",
+  "en": "Mooshak (Ganesha's mouse)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "rat",
+  "scale": 1.4
+ },
+ {
+  "id": "rat",
+  "hi": "चूहा",
+  "en": "Rat",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "rat"
+ },
+ {
+  "id": "cat",
+  "hi": "बिल्ली",
+  "en": "Cat",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "cat"
+ },
+ {
+  "id": "monkey_animal",
+  "hi": "बंदर",
+  "en": "Monkey",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "monkey"
+ },
+ {
+  "id": "langur",
+  "hi": "लंगूर",
+  "en": "Langur",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "monkey",
+  "color": "#c8c0b0"
+ },
+ {
+  "id": "rhino",
+  "hi": "गैंडा",
+  "en": "Rhinoceros",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "rhino"
+ },
+ {
+  "id": "mule",
+  "hi": "खच्चर",
+  "en": "Mule",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "donkey",
+  "color": "#6a5a4a"
+ },
+ {
+  "id": "ox_pair",
+  "hi": "बैलगाड़ी का बैल",
+  "en": "Cart ox",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "bull",
+  "color": "#d8c8b0"
+ },
+ {
+  "id": "gaur",
+  "hi": "गौर (वन भैंसा)",
+  "en": "Gaur (Indian bison)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "buffalo",
+  "color": "#2a1e18"
+ },
+ {
+  "id": "sambar",
+  "hi": "साँभर",
+  "en": "Sambar deer",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer",
+  "color": "#6a4a32",
+  "pattern": null
+ },
+ {
+  "id": "nilgai",
+  "hi": "नीलगाय",
+  "en": "Nilgai",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "deer",
+  "color": "#7a7a8a",
+  "pattern": null,
+  "horns": "back"
+ },
+ {
+  "id": "tortoise",
+  "hi": "कछुआ",
+  "en": "Tortoise (Kurma)",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "rat",
+  "L": 20,
+  "H": 9,
+  "leg": 3,
+  "lw": 3.2,
+  "color": "#6a7a3a",
+  "pattern": "wool",
+  "tail": "short",
+  "head": "rodent",
+  "scale": 1.6
+ },
+ {
+  "id": "crocodile",
+  "hi": "मगरमच्छ (मकर)",
+  "en": "Crocodile / Makara",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "dog",
+  "L": 40,
+  "H": 6,
+  "leg": 4,
+  "lw": 3.0,
+  "color": "#4a6a4a",
+  "pattern": "wool",
+  "tail": "long_cat",
+  "head": "canine",
+  "neck": 2,
+  "neck_ang": 0
+ },
+ {
+  "id": "frog",
+  "hi": "मेंढक",
+  "en": "Frog",
+  "cat": "animal",
+  "kind": "quadruped",
+  "base": "rat",
+  "L": 8,
+  "H": 6,
+  "color": "#5a8a3a",
+  "tail": "none",
+  "ears": "small"
+ },
+ {
+  "id": "sheshnaag_animal",
+  "hi": "शेषनाग (शय्या)",
+  "en": "Sheshnaag (coiled bed)",
+  "cat": "serpent",
+  "kind": "serpent",
+  "hoods": 7,
+  "color": "#2f6a4a",
+  "length": 1.4
+ },
+ {
+  "id": "vasuki_animal",
+  "hi": "वासुकि (सर्प)",
+  "en": "Vasuki (serpent)",
+  "cat": "serpent",
+  "kind": "serpent",
+  "hoods": 1,
+  "color": "#3a6a5a",
+  "length": 1.6
+ },
+ {
+  "id": "kaliya_animal",
+  "hi": "कालिया (सर्प)",
+  "en": "Kaliya (serpent)",
+  "cat": "serpent",
+  "kind": "serpent",
+  "hoods": 5,
+  "color": "#1e2a2a"
+ },
+ {
+  "id": "cobra",
+  "hi": "नाग",
+  "en": "Cobra",
+  "cat": "serpent",
+  "kind": "serpent",
+  "hoods": 1,
+  "color": "#3a3a2a"
+ },
+ {
+  "id": "python",
+  "hi": "अजगर",
+  "en": "Python",
+  "cat": "serpent",
+  "kind": "serpent",
+  "hoods": 1,
+  "color": "#7a6a3a",
+  "length": 1.6
+ },
+ {
+  "id": "takshaka_animal",
+  "hi": "तक्षक (सर्प)",
+  "en": "Takshaka (serpent)",
+  "cat": "serpent",
+  "kind": "serpent",
+  "hoods": 3,
+  "color": "#5a3a2a"
+ },
+ {
+  "id": "matsya_fish",
+  "hi": "मत्स्य (स्वर्ण मछली)",
+  "en": "Matsya (golden fish)",
+  "cat": "fish",
+  "kind": "fish",
+  "color": "#f2a23a",
+  "size": 1.6
+ },
+ {
+  "id": "fish",
+  "hi": "मछली",
+  "en": "Fish",
+  "cat": "fish",
+  "kind": "fish",
+  "color": "#7aa0b8"
+ },
+ {
+  "id": "koi",
+  "hi": "रंगीन मछली",
+  "en": "Koi",
+  "cat": "fish",
+  "kind": "fish",
+  "color": "#e8833a"
+ },
+ {
+  "id": "makara_fish",
+  "hi": "मकर",
+  "en": "Makara (sea monster)",
+  "cat": "fish",
+  "kind": "fish",
+  "color": "#3f8f8a",
+  "size": 2.4
+ }
+]

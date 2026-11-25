@@ -1,0 +1,7 @@
+# mythic25d engine — Python >= 3.9, plus ffmpeg (with libass) on PATH
+numpy>=1.24
+Pillow>=10.0
+PyYAML>=6.0
+edge-tts>=6.1        # Hindi neural TTS with word boundaries (needs internet)
+# optional:
+# faster-whisper>=1.0   # better word alignment for your own voice recordings

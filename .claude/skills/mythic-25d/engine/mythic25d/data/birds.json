@@ -1,0 +1,409 @@
+[
+ {
+  "id": "peacock",
+  "hi": "मोर",
+  "en": "Peacock",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "peacock"
+ },
+ {
+  "id": "paravani",
+  "hi": "परवाणी (कार्तिकेय का मोर)",
+  "en": "Paravani (Kartikeya's peacock)",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "peacock",
+  "size": 1.3
+ },
+ {
+  "id": "peahen",
+  "hi": "मोरनी",
+  "en": "Peahen",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "peacock",
+  "tail": "short",
+  "body": "#7a8a6a",
+  "head": "#7a8a6a",
+  "crest": "peacock"
+ },
+ {
+  "id": "hamsa",
+  "hi": "हंस",
+  "en": "Hamsa (swan)",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "hamsa"
+ },
+ {
+  "id": "saraswati_hamsa",
+  "hi": "सरस्वती का हंस",
+  "en": "Saraswati's swan",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "hamsa",
+  "size": 1.3
+ },
+ {
+  "id": "brahma_hamsa",
+  "hi": "ब्रह्मा का हंस",
+  "en": "Brahma's swan",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "hamsa",
+  "size": 1.4
+ },
+ {
+  "id": "eagle",
+  "hi": "चील/गरुड़ पक्षी",
+  "en": "Eagle",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "eagle"
+ },
+ {
+  "id": "garuda_bird",
+  "hi": "गरुड़ (पक्षी रूप)",
+  "en": "Garuda (bird form)",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "garuda_bird"
+ },
+ {
+  "id": "jatayu",
+  "hi": "जटायु",
+  "en": "Jatayu",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "vulture",
+  "size": 1.6
+ },
+ {
+  "id": "sampati",
+  "hi": "सम्पाति",
+  "en": "Sampati",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "vulture",
+  "size": 1.6,
+  "wing": "#5a3a2a"
+ },
+ {
+  "id": "vulture",
+  "hi": "गिद्ध",
+  "en": "Vulture",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "vulture"
+ },
+ {
+  "id": "owl",
+  "hi": "उल्लू",
+  "en": "Owl",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "owl"
+ },
+ {
+  "id": "uluka",
+  "hi": "उलूक (लक्ष्मी वाहन)",
+  "en": "Uluka (Lakshmi's owl)",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "owl",
+  "body": "#e8dcc4",
+  "head": "#e8dcc4",
+  "wing": "#c8b898"
+ },
+ {
+  "id": "crow",
+  "hi": "कौआ",
+  "en": "Crow",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "crow"
+ },
+ {
+  "id": "shani_crow",
+  "hi": "शनि का कौआ",
+  "en": "Shani's crow",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "crow",
+  "size": 1.1
+ },
+ {
+  "id": "kakbhushundi",
+  "hi": "काकभुशुण्डि",
+  "en": "Kakbhushundi",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "crow",
+  "size": 1.0
+ },
+ {
+  "id": "parrot",
+  "hi": "तोता",
+  "en": "Parrot",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "parrot"
+ },
+ {
+  "id": "shuka_parrot",
+  "hi": "शुक (कामदेव का तोता)",
+  "en": "Kamadeva's parrot",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "parrot",
+  "size": 1.0
+ },
+ {
+  "id": "crane",
+  "hi": "सारस/बगुला",
+  "en": "Crane",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "crane"
+ },
+ {
+  "id": "heron",
+  "hi": "बगुला",
+  "en": "Heron",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "heron"
+ },
+ {
+  "id": "sparrow",
+  "hi": "गौरैया",
+  "en": "Sparrow",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "sparrow"
+ },
+ {
+  "id": "pigeon",
+  "hi": "कबूतर",
+  "en": "Pigeon",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "pigeon"
+ },
+ {
+  "id": "rooster",
+  "hi": "मुर्गा",
+  "en": "Rooster",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "rooster"
+ },
+ {
+  "id": "hen",
+  "hi": "मुर्गी",
+  "en": "Hen",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "hen"
+ },
+ {
+  "id": "kingfisher",
+  "hi": "किलकिला",
+  "en": "Kingfisher",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "kingfisher"
+ },
+ {
+  "id": "koel",
+  "hi": "कोयल",
+  "en": "Koel",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "koel"
+ },
+ {
+  "id": "myna",
+  "hi": "मैना",
+  "en": "Myna",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "myna"
+ },
+ {
+  "id": "hornbill",
+  "hi": "धनेश",
+  "en": "Hornbill",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "hornbill"
+ },
+ {
+  "id": "flamingo",
+  "hi": "राजहंस",
+  "en": "Flamingo",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "flamingo"
+ },
+ {
+  "id": "kite",
+  "hi": "चील",
+  "en": "Kite",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "kite"
+ },
+ {
+  "id": "falcon",
+  "hi": "बाज़",
+  "en": "Falcon",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "falcon"
+ },
+ {
+  "id": "stork",
+  "hi": "लगलग",
+  "en": "Stork",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "stork"
+ },
+ {
+  "id": "duck",
+  "hi": "बत्तख",
+  "en": "Duck",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "duck"
+ },
+ {
+  "id": "chakravak",
+  "hi": "चकवा",
+  "en": "Chakravak (ruddy shelduck)",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "chakravak"
+ },
+ {
+  "id": "bulbul",
+  "hi": "बुलबुल",
+  "en": "Bulbul",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "bulbul"
+ },
+ {
+  "id": "woodpecker",
+  "hi": "कठफोड़वा",
+  "en": "Woodpecker",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "woodpecker"
+ },
+ {
+  "id": "nightingale",
+  "hi": "बुलबुल (कोकिला)",
+  "en": "Nightingale",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "nightingale"
+ },
+ {
+  "id": "quail",
+  "hi": "बटेर",
+  "en": "Quail",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "quail"
+ },
+ {
+  "id": "partridge",
+  "hi": "तीतर",
+  "en": "Partridge",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "partridge"
+ },
+ {
+  "id": "chakor",
+  "hi": "चकोर",
+  "en": "Chakor",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "chakor"
+ },
+ {
+  "id": "sarus",
+  "hi": "सारस",
+  "en": "Sarus crane",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "sarus"
+ },
+ {
+  "id": "cuckoo",
+  "hi": "पपीहा",
+  "en": "Cuckoo / Papiha",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "cuckoo"
+ },
+ {
+  "id": "hawk",
+  "hi": "श्येन",
+  "en": "Hawk (shyena)",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "hawk"
+ },
+ {
+  "id": "pelican",
+  "hi": "हवासील",
+  "en": "Pelican",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "pelican"
+ },
+ {
+  "id": "bat",
+  "hi": "चमगादड़",
+  "en": "Bat",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "bat"
+ },
+ {
+  "id": "butterfly",
+  "hi": "तितली",
+  "en": "Butterfly",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "butterfly"
+ },
+ {
+  "id": "golden_bird",
+  "hi": "सोने की चिड़िया",
+  "en": "Golden bird",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "sparrow",
+  "body": "#f2c23a",
+  "wing": "#e0a020",
+  "head": "#f2c23a",
+  "size": 0.6
+ },
+ {
+  "id": "gandaberunda",
+  "hi": "गण्डभेरुण्ड",
+  "en": "Gandaberunda",
+  "cat": "bird",
+  "kind": "bird",
+  "base": "eagle",
+  "size": 1.5,
+  "body": "#c8a040",
+  "wing": "#a87a20"
+ }
+]
