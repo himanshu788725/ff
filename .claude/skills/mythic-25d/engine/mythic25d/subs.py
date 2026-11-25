@@ -110,14 +110,24 @@ def build_ass(plan, out_path: Path):
     max_words = int(cfg.get("max_words", 4 if portrait else 7))
     ev = []
     if cfg.get("enabled", True):
+        # resolve line timing globally so two lines never overlap (they would stack on screen)
+        entries = []
         for sub in plan["subs"]:
+            for ln in split_lines(sub["words"], max_chars, max_words):
+                entries.append((ln[0]["s"] - 0.08, ln, sub))
+        entries.sort(key=lambda e: e[0])
+        timed = []
+        for i, (l0, ln, sub) in enumerate(entries):
+            want = ln[-1]["e"] + 0.45
+            nxt0 = entries[i + 1][0] - 0.02 if i + 1 < len(entries) else want
+            l1 = max(min(want, nxt0), l0 + 0.3)
+            if i + 1 < len(entries) and l1 > nxt0:
+                l1 = max(l0 + 0.05, nxt0)
+            timed.append((l0, l1, ln, sub))
+        for l0, l1, ln, sub in timed:
             base = cream if sub["speaker"] in ("narrator", None) else dialog
             kws = sub.get("keywords", [])
-            lines = split_lines(sub["words"], max_chars, max_words)
-            for li, ln in enumerate(lines):
-                l0 = ln[0]["s"] - 0.08
-                nxt = lines[li + 1][0]["s"] - 0.05 if li + 1 < len(lines) else ln[-1]["e"] + 0.45
-                l1 = max(ln[-1]["e"] + 0.12, min(nxt, ln[-1]["e"] + 0.45))
+            if True:
                 if style == "pop":
                     k = 0
                     chunk = int(cfg.get("pop_words", 1 if portrait else 2))
