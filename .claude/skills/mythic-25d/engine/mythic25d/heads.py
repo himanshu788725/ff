@@ -47,6 +47,13 @@ def _ear(p, x, y, skin, s=1.0):
     p.line([(x + 0.2 * s, y - 1.1 * s), (x - 0.6 * s, y - 0.9 * s), (x - 0.5 * s, y + 0.6 * s)], INK, 0.22, smooth=True)
 
 
+def kundal_disc(p, x, y, r=1.2, color="#e6c665", gem="vermilion"):
+    p.circle(x, y, r, fill=color, outline=shade(color, -0.45), w=0.16)
+    p.circle(x, y, r * 0.66, outline=shade(color, -0.35), w=0.14)
+    p.circle(x, y, r * 0.3, fill=gem)
+    p.circle(x - r * 0.35, y - r * 0.35, r * 0.13, fill="#fff4d0")
+
+
 def _kundal(p, x, y, color="gold", r=1.0, kind="ring"):
     if kind == "jhumka":
         p.line([(x, y - 0.4), (x, y + 0.6)], "gold_dk", 0.18)
@@ -89,7 +96,7 @@ def _human(p, s, female=False):
     p.poly(pts, fill=skin, smooth=True, n=8)
     # cheek warmth
     p.ellipse(2.4, -5.6, 1.6, 1.0, fill=mix(skin, "#d0603e", 0.12))
-    _eye(p, 2.55, -8.3, 3.3 if not female else 3.5, 0.95 if not female else 1.05,
+    _eye(p, 2.55, -8.3, 3.6 if not female else 3.7, 1.0 if not female else 1.08,
          "round" if s.get("eye") == "round" else "almond",
          iris=s.get("iris", "black"))
     _brow(p, 2.6, -9.75, 3.5, 0.6, angry=s.get("angry", False))
@@ -103,12 +110,16 @@ def _human(p, s, female=False):
     if s.get("fangs"):
         p.poly([(4.9, -4.95), (4.6, -3.7), (4.4, -4.95)], fill="#f6efdf", outline=INK, w=0.12)
         p.poly([(4.0, -4.95), (3.8, -5.9), (3.6, -4.95)], fill="#f6efdf", outline=INK, w=0.12)
-    # ear + earring
+    # ear + the big cheek kundal disc
     _ear(p, -1.2, -7.6, skin)
-    _kundal(p, -1.25, -5.9, s.get("metal", "gold"), 0.9, "jhumka" if female else "ring")
     if female:
-        p.circle(5.25, -6.15, 0.55, outline="gold", w=0.2)  # nath
-        p.circle(5.6, -5.75, 0.16, fill="#f6efdf")
+        _kundal(p, -1.25, -5.9, s.get("metal", "gold"), 0.8, "jhumka")
+        kundal_disc(p, 0.7, -6.9, 1.05)
+        p.circle(5.15, -6.0, 0.85, outline="#e6c665", w=0.26)  # big nath
+        p.circle(5.55, -5.45, 0.2, fill="#f6efdf")
+        p.circle(4.7, -5.2, 0.14, fill="vermilion")
+    else:
+        kundal_disc(p, 0.4, -6.8, 1.2)
     # mustache
     m = s.get("mustache")
     if m:
@@ -145,18 +156,30 @@ def _hair_back(p, s, female=False):
     style = s.get("hair", "long")
     if style in (None, "none", "bald"):
         return
+    hl = shade(col, 0.22)
     if female:
-        pts = [(-0.5, -14.2), (-4.6, -12.9), (-6.2, -9.0), (-6.2, -4.0), (-7.0, 2.5), (-7.6, 9.0),
-               (-5.8, 12.0), (-4.2, 8.0), (-3.6, 2.0), (-2.6, -3.2)]
-    elif style == "short":
+        pts = [(-0.5, -14.2), (-4.6, -12.9), (-6.2, -9.0), (-6.0, -4.0), (-5.2, -1.0), (-3.0, -2.6), (-2.6, -6.0)]
+        p.poly(pts, fill=col, smooth=True)
+        # long braid down the back with white gajra flowers
+        braid = catmull([(-5.0, -5.0), (-6.4, 2.0), (-6.8, 10.0), (-6.4, 18.0), (-6.0, 24.0)], False, 6)
+        for i in range(len(braid) - 1):
+            w = 2.4 - 1.1 * i / len(braid)
+            p.poly(limb(braid[i], braid[i + 1], w, w * 0.96), fill=col)
+        for i in range(1, len(braid) - 1, 2):
+            x, y = braid[i]
+            p.line([(x - 0.9, y - 0.5), (x + 0.9, y + 0.5)], hl, 0.16)
+            p.circle(x + 1.0, y, 0.42, fill="#f8f2e2")
+        tx, ty = braid[-1]
+        p.poly([(tx - 0.8, ty), (tx, ty + 2.6), (tx + 0.8, ty)], fill="vermilion")
+        return
+    if style == "short":
         pts = [(-0.5, -14.4), (-4.8, -12.8), (-6.0, -9.0), (-5.6, -5.4), (-3.5, -4.4), (-2.0, -6.8)]
     else:
-        pts = [(-0.5, -14.4), (-4.8, -12.9), (-6.3, -9.0), (-6.6, -4.0), (-7.6, 1.8), (-8.0, 6.0),
-               (-6.2, 6.8), (-4.6, 3.2), (-3.6, -1.6), (-2.2, -3.4)]
+        pts = [(-0.5, -14.4), (-4.8, -12.9), (-6.3, -9.0), (-6.6, -4.0), (-7.4, 1.8), (-7.6, 7.0),
+               (-5.6, 7.6), (-4.4, 3.2), (-3.6, -1.6), (-2.2, -3.4)]
     p.poly(pts, fill=col, smooth=True)
-    hl = shade(col, 0.22)
-    for k in range(3):
-        p.line([(-3.0 - k * 0.9, -12.5), (-5.0 - k * 0.6, -8), (-5.4 - k * 0.7, -2), (-6 - k * 0.5, 3)], hl, 0.16,
+    for k in range(4):
+        p.line([(-2.6 - k * 0.9, -12.5), (-4.8 - k * 0.6, -8), (-5.2 - k * 0.6, -2), (-5.6 - k * 0.45, 4)], hl, 0.15,
                smooth=True)
 
 
@@ -190,7 +213,7 @@ def _monkey(p, s):
     _eye(p, 3.6, -9.3, 2.4, 0.85)
     p.line([(3.0, -6.4), (4.0, -4.0)], shade(muzzle, -0.25), 0.18)
     _ear(p, -1.6, -8.0, skin, 1.25)
-    _kundal(p, -1.6, -5.9, "gold", 1.0)
+    kundal_disc(p, 0.6, -6.6, 1.15)
     if s.get("tilak"):
         _tilak(p, s["tilak"], 4.0, -12.2)
 
@@ -335,44 +358,62 @@ HEADS = {"human": _human, "monkey": _monkey, "bear": _bear, "elephant": _elephan
 
 # =========================================================================== headgear
 
-def _kirita(p, s, tiers=6, h=2.15, w0=9.2, top=1.6, base=-12.4, dx=-0.3):
-    gold = s.get("crown_color", "gold")
-    gd = shade(gold, -0.32)
+def _flame_plume(p, x, y, color="vermilion", s=1.0):
+    """Red flame-like feather fan fixed at the back of the crown (reference signature)."""
+    tip = shade(color, 0.35)
+    for k, (ang, L) in enumerate(((-150, 5.6), (-128, 6.6), (-106, 5.8), (-170, 4.4))):
+        a = math.radians(ang)
+        ex, ey = x + math.cos(a) * L * s, y + math.sin(a) * L * s
+        nx, ny = -math.sin(a), math.cos(a)
+        w = 1.25 * s
+        pts = [(x + nx * w * 0.5, y + ny * w * 0.5), ((x + ex) / 2 + nx * w, (y + ey) / 2 + ny * w), (ex, ey),
+               ((x + ex) / 2 - nx * w * 0.6, (y + ey) / 2 - ny * w * 0.6), (x - nx * w * 0.5, y - ny * w * 0.5)]
+        p.poly(pts, fill=color if k % 2 == 0 else shade(color, -0.12), smooth=True, n=6)
+        p.line([(x, y), ((x + ex) / 2, (y + ey) / 2), (ex, ey)], tip, 0.22, smooth=True)
+    p.circle(x, y, 0.75 * s, fill="gold")
+
+
+def _kirita(p, s, tiers=5, h=2.35, w0=9.0, top=1.6, base=-12.4, dx=-0.3):
+    """Tall mukut of stacked rounded rings, narrowing upward, lotus-bud finial (reference style)."""
+    gold = s.get("crown_color", "#e6c665")
+    gd = shade(gold, -0.42)
     gem = s.get("gem", "vermilion")
-    # plume at back (red/green feather tuft — very characteristic)
     if s.get("plume", True):
-        pl = s.get("plume_color", "vermilion")
-        y = base - tiers * h * 0.55
-        p.poly([(-3.0 + dx, y + 1.0), (-7.4 + dx, y - 1.8), (-8.8 + dx, y - 4.6), (-6.0 + dx, y - 3.2), (-5.4 + dx, y - 5.4),
-                (-3.4 + dx, y - 1.6)], fill=pl, smooth=True)
-        p.poly([(-3.4 + dx, y + 0.2), (-6.6 + dx, y - 2.0), (-5.2 + dx, y - 0.6)], fill="leaf", smooth=True)
-    # side flare (makara) behind ears
-    p.poly([(-4.6 + dx, base + 0.4), (-7.0 + dx, base - 1.6), (-6.2 + dx, base + 1.8), (-4.4 + dx, base + 2.4)], fill=gold,
+        _flame_plume(p, -4.0 + dx, base - h * 1.6, s.get("plume_color", "vermilion"))
+    # makara ear-flare
+    p.poly([(-4.6 + dx, base + 0.6), (-7.0 + dx, base - 1.2), (-6.4 + dx, base + 1.6), (-4.4 + dx, base + 2.6)], fill=gold,
            smooth=True)
     y = base
     for k in range(tiers):
-        f0 = 1 - k / (tiers + 0.6)
-        f1 = 1 - (k + 1) / (tiers + 0.6)
-        a0, a1 = w0 * f0 / 2, w0 * f1 / 2
-        cx = dx + k * 0.05
-        quad = [(cx - a0, y), (cx - a1 * 1.08, y - h * 0.55), (cx - a1, y - h), (cx + a1, y - h),
-                (cx + a1 * 1.08, y - h * 0.55), (cx + a0, y)]
-        p.poly(quad, fill=gold if k % 2 == 0 else shade(gold, 0.1), smooth=False)
-        p.line([(cx - a0, y), (cx + a0, y)], gd, 0.24)
-        for j in range(max(1, int(a0 * 1.2))):
-            xx = cx - a0 + (j + 0.5) * (2 * a0) / max(1, int(a0 * 1.2))
-            p.circle(xx, y - h * 0.45, 0.17, fill=gd if k % 2 else "cream")
+        a = w0 / 2 * (1 - 0.15 * k) - 0.15 * k * k * 0.5
+        a = max(1.3, a)
+        cx = dx + 0.06 * k
+        ring = [(cx - a, y), (cx - a * 1.07, y - h * 0.5), (cx - a * 0.96, y - h), (cx + a * 0.96, y - h),
+                (cx + a * 1.07, y - h * 0.5), (cx + a, y)]
+        p.poly(ring, fill=gold if k % 2 == 0 else shade(gold, 0.1), smooth=True, n=5)
+        p.line([(cx - a * 0.96, y - h), (cx + a * 0.96, y - h)], gd, 0.26)
+        p.line(arc_pts(cx, y - h * 0.5, a * 0.98, h * 0.18, 20, 160, 10), shade(gold, -0.2), 0.14)
+        n = max(2, int(a * 1.1))
+        for j in range(n):
+            xx = cx - a * 0.8 + (j + 0.5) * (1.6 * a) / n
+            p.circle(xx, y - h * 0.5, 0.2, fill=gd)
+        if k < 3:
+            p.circle(cx + a * 0.62, y - h * 0.5, 0.42, fill=gem if k % 2 == 0 else "emerald")
         y -= h
-    p.circle(dx + tiers * 0.05, y - 0.7, 0.95, fill=gold, outline=gd, w=0.15)
-    p.poly([(dx - 0.5, y - 1.3), (dx, y - top - 1.6), (dx + 0.5, y - 1.3)], fill=gold)
-    # crown band with gem row
-    band = [(-4.9 + dx, base + 1.5), (4.6 + dx, base + 1.3), (4.4 + dx, base - 0.3), (-4.8 + dx, base - 0.2)]
+    cx = dx + 0.06 * tiers
+    # lotus-bud finial
+    p.ellipse(cx, y - 0.2, 1.4, 0.55, fill=shade(gold, 0.1), outline=gd, w=0.14)
+    p.poly([(cx - 1.15, y - 0.4), (cx - 0.95, y - 2.0), (cx, y - top - 2.4), (cx + 0.95, y - 2.0), (cx + 1.15, y - 0.4)],
+           fill=gold, smooth=True)
+    p.line([(cx, y - 0.5), (cx, y - top - 1.8)], gd, 0.14)
+    # base band with jewelled front ornament
+    band = [(-5.0 + dx, base + 1.6), (4.8 + dx, base + 1.4), (4.6 + dx, base - 0.4), (-4.9 + dx, base - 0.3)]
     p.poly(band, fill=gold)
-    p.line([(-4.8 + dx, base + 0.65), (4.5 + dx, base + 0.5)], gd, 0.18)
-    for k in range(4):
-        p.circle(-3.4 + dx + k * 2.4, base + 0.6, 0.38, fill=gem if k % 2 == 0 else "emerald")
-    p.circle(3.6 + dx, base - 0.8, 0.9, fill=gold, outline=gd, w=0.14)
-    p.circle(3.6 + dx, base - 0.8, 0.42, fill=gem)
+    p.line([(-4.9 + dx, base + 0.65), (4.7 + dx, base + 0.5)], gd, 0.2)
+    for k in range(5):
+        p.circle(-3.8 + dx + k * 1.9, base + 0.6, 0.32, fill=gem if k % 2 == 0 else "emerald")
+    p.poly([(2.8 + dx, base - 0.2), (3.7 + dx, base - 2.6), (4.6 + dx, base - 0.2)], fill=gold, smooth=True)
+    p.circle(3.7 + dx, base - 0.9, 0.5, fill=gem)
 
 
 def _peacock_feather(p, x, y, ang=-20, L=8.0):

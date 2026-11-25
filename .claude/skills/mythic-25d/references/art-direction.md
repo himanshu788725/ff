@@ -34,6 +34,26 @@
 Tune per shot: `light: {bg_dim: 0.75, bg_desat: 0.7}` for more pop, `bg_dim: 0.95` for a brighter set.
 Edit `CHAR_STYLE` in `engine/mythic25d/gfx.py` to change outline thickness / bevel globally.
 
+## Puppet anatomy (every humanoid is built from these pieces)
+
+| piece | detail |
+|---|---|
+| crown (`heads._kirita`) | stacked rounded gold rings narrowing upward, gems on every tier, lotus-bud finial, jewelled base band, red flame plume behind |
+| face | profile, big almond eye with kohl flick, long nose line, curled moustache (men), tilak; women add a large nath ring and jhumka |
+| ear | round gold **kundal disc** with a vermilion gem on the cheek (the reference's most recognisable jewel) |
+| hair | men: long locks with highlight strands down the back; women: long braid with gajra flowers and a red tassel; rishis: tall jata dome |
+| torso | collarbones, multi-strand necklaces with drops/pearls, sacred thread or crossed straps (`straps: true`), beaded belt with tassels |
+| body lines | dark skin (Bhima, Kali, rakshasas) gets light gold body lines; light skin gets darker lines |
+| arms | capsule upper arm with shoulder cap and double bajuband → forearm with bangles → separate hand, rivets at shoulder/elbow/wrist; weapons sit in the hand |
+| waist | dhoti/lehenga with pattern, striped front flap with a tassel |
+| legs | thigh (dhoti) → shin + foot with anklets, rivet at the knee |
+| seat | `pose: seated` sits on a red cushion with gold stripe on a dark stone block; women sit side-saddle |
+| extras | extra arms fan behind with their own hands and weapons; Ravana-style extra heads fan in an arc around the crown; quiver appears automatically with a bow; tails are segmented with rivets |
+
+Fields that change this look per character: `skin`, `crown`, `crown_color`, `plume`, `tiers`, `hair`, `beard`,
+`dhoti`, `saree`, `straps`, `strap_color`, `necklace`, `pearls`, `arms`, `heads`, `items`, `seat`
+(see `storyboard-schema.md#characters`).
+
 ## Palette (named colours usable everywhere)
 
 ochre `ochre` · mustard `mustard` · saffron `saffron` · vermilion `vermilion` · maroon `maroon` · indigo

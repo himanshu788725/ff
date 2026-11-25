@@ -5441,7 +5441,7 @@
   "sash": "mustard",
   "mustache": "big",
   "pearls": true,
-  "skin": "skin_brown",
+  "skin": "#7e4a2c",
   "build": "heavy",
   "items": {
    "f": "gada"
@@ -5450,7 +5450,8 @@
    "mustard",
    "dots",
    "vermilion"
-  ]
+  ],
+  "straps": true
  },
  {
   "id": "yudhishthira",
@@ -5555,7 +5556,8 @@
    "dots",
    "gold"
   ],
-  "angry": true
+  "angry": true,
+  "straps": true
  },
  {
   "id": "dushasana",
@@ -11616,6 +11618,7 @@
   "items": {
    "f": "gada"
   },
+  "straps": true,
   "build": "heavy",
   "dhoti": [
    "saffron",
@@ -12124,6 +12127,7 @@
   "items": {
    "f": "khadga"
   },
+  "straps": true,
   "dhoti": [
    "#8a3a6a",
    "dots",

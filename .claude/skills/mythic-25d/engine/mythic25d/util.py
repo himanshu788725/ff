@@ -20,8 +20,8 @@ CACHE_DIR = Path(os.environ.get("MYTHIC_CACHE", Path.home() / ".cache" / "mythic
 NAMED = {
     # folk-art paint box (Kalamkari / Pattachitra / Cheriyal inspired)
     "ink": "#2a1a10", "ink2": "#3b2616", "cream": "#f1e2bf", "bone": "#e8d8b4",
-    "paper": "#e6d3a8", "ochre": "#d39b3a", "mustard": "#e2b448", "gold": "#e0ad3c",
-    "gold_dk": "#b07d22", "saffron": "#e8843a", "vermilion": "#c63f28", "red": "#b8321f",
+    "paper": "#e6d3a8", "ochre": "#d39b3a", "mustard": "#dcb04e", "gold": "#e2bc5a",
+    "gold_dk": "#a87a2a", "saffron": "#e08a3c", "vermilion": "#bd4a2c", "red": "#b8321f",
     "maroon": "#7a2318", "rose": "#d9776b", "pink": "#e59aa8", "lotus": "#e98aa0",
     "indigo": "#2f3a72", "navy": "#1f2850", "peacock": "#1d6d78", "teal": "#3f8f8a",
     "mint": "#9fd8c2", "leaf": "#4f7d3a", "leaf_dk": "#2f5428", "olive": "#7f7b3a",

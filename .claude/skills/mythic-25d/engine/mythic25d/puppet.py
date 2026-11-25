@@ -11,6 +11,7 @@ import math
 import pickle
 
 from .gfx import CHAR_STYLE, Pen, arc_pts, catmull, limb, rot, move
+from .util import mix
 
 
 def fin(p, **kw):
@@ -75,6 +76,15 @@ def torso_outline(b, female=False):
     return pts
 
 
+def luminance(c):
+    r, g, b_, _ = rgb(c)
+    return (0.299 * r + 0.587 * g + 0.114 * b_) / 255.0
+
+
+def body_line(skin):
+    return mix(skin, "#f4dca0", 0.62) if luminance(skin) < 0.5 else shade(skin, -0.42)
+
+
 def build_torso(s, b, ppu):
     p = Pen((-16, -46, 16, 6), ppu)
     skin = s["skin"]
@@ -108,8 +118,10 @@ def build_torso(s, b, ppu):
             p.pattern(plate, "scales", shade(ac, -0.35), 1.6, 0.5, smooth=True)
             p.line(catmull(plate, True, 6) + [catmull(plate, True, 6)[0]], metal, 0.4)
         else:
-            # pectorals, abdomen, navel — drawn as ink line work like the folk puppets
-            line = shade(skin, -0.42)
+            # pectorals, collarbones, abdomen, navel — light gold lines on dark skin (reference), ink on light skin
+            line = body_line(skin)
+            p.line([(-5.6, -37.0), (-1.2, -36.0)], line, 0.18)
+            p.line([(1.8, -36.0), (6.2, -37.0)], line, 0.18)
             p.line(arc_pts(-3.6, -30.4, 3.2, 1.8, 20, 160, 12), line, 0.24)
             p.line(arc_pts(3.6, -30.4, 3.2, 1.8, 20, 160, 12), line, 0.24)
             p.circle(-3.6, -29.4, 0.3, fill=line)
@@ -144,15 +156,31 @@ def build_torso(s, b, ppu):
         for k in range(17):
             a = math.radians(200 + k * (140 / 16))
             p.circle(0.3 + math.cos(a) * 5.4, -38.6 - math.sin(a) * 6.0 - 1.4, 0.48, fill="#6a2f1c")
-    # necklace(s)
+    # crossed warrior straps (Bhima-style bandolier)
+    if s.get("straps") and not female:
+        sc = s.get("strap_color", "#e2bc5a")
+        for (x0, y0, x1, y1) in ((sw - 2.0, -38.6, -ww + 0.4, -10.4), (-sw + 2.0, -38.6, ww - 0.4, -10.4)):
+            p.poly(limb((x0, y0), (x1, y1), 1.5, 1.5), fill=sc)
+            p.line([(x0, y0), (x1, y1)], shade(sc, -0.35), 0.12)
+        p.circle(0.3, -25.0, 1.0, fill=sc, outline=shade(sc, -0.4), w=0.15)
+    # necklaces: thin multi-strand gold with drop pendants (+ pearls / red beads)
     if s.get("necklace"):
-        p.line(arc_pts(0.3, -39.6, 4.6, 4.4, 15, 165, 18), metal, 0.65)
-        p.poly([(-0.6, -35.0), (0.3, -32.6), (1.2, -35.0)], fill=metal)
-        p.circle(0.3, -33.8, 0.5, fill="vermilion")
+        p.line(arc_pts(0.3, -39.6, 4.4, 3.4, 15, 165, 18), metal, 0.42)
+        p.line(arc_pts(0.3, -39.6, 5.4, 6.2, 18, 162, 20), metal, 0.3)
+        for k in range(7):
+            a = math.radians(35 + k * 18.3)
+            x, y = 0.3 + math.cos(a) * 5.4, -39.6 + math.sin(a) * 6.2
+            p.poly([(x - 0.35, y), (x, y + 1.1), (x + 0.35, y)], fill=metal)
+        p.poly([(-0.7, -34.0), (0.3, -31.2), (1.3, -34.0)], fill=metal)
+        p.circle(0.3, -32.8, 0.55, fill="vermilion")
         if s.get("pearls") or female:
             for k in range(15):
                 a = math.radians(20 + k * 10)
-                p.circle(0.3 + math.cos(a) * 6.4, -39.0 + math.sin(a) * 8.6, 0.34, fill="#f6efdf")
+                p.circle(0.3 + math.cos(a) * 6.6, -39.0 + math.sin(a) * 9.2, 0.32, fill="#f6efdf")
+        elif s.get("beads", True):
+            for k in range(12):
+                a = math.radians(28 + k * 11.3)
+                p.circle(0.3 + math.cos(a) * 3.6, -39.6 + math.sin(a) * 2.8 + 0.6, 0.3, fill="#c4362a" if k % 2 else "#e2bc5a")
     if s.get("mundamala"):
         for k in range(13):
             a = math.radians(15 + k * 12)
@@ -170,27 +198,34 @@ def build_torso(s, b, ppu):
                fill="#3f7a48", smooth=True)
         p.pattern(body, "speckle", "#9fd08a", 1.2, 0.3)
         p.circle(hx + 0.6, hy - 1.0, 0.25, fill="#f2d36a")
-    # waist band (kamarbandh)
-    p.poly([(-b["hw"] - 0.2 - b["belly"] * 0.1, -4.6), (b["hw"] + 0.2 + b["belly"] * 0.3, -4.6),
-            (b["hw"] - 0.1, -1.2), (-b["hw"] + 0.1, -1.2)], fill=metal)
-    for k in range(7):
-        p.circle(-b["hw"] + 1.2 + k * (2 * b["hw"] - 2.4) / 6, -2.9, 0.36, fill="vermilion" if k % 2 else "emerald")
+    # waist band (kamarbandh): gold belt, bead row, little tassels
+    x0, x1 = -b["hw"] - 0.2 - b["belly"] * 0.1, b["hw"] + 0.2 + b["belly"] * 0.3
+    p.poly([(x0, -4.8), (x1, -4.8), (b["hw"] - 0.1, -1.0), (-b["hw"] + 0.1, -1.0)], fill=metal)
+    p.line([(x0 + 0.3, -3.9), (x1 - 0.3, -3.9)], shade(metal, -0.4), 0.14)
+    for k in range(9):
+        xx = -b["hw"] + 0.9 + k * (2 * b["hw"] - 1.8) / 8
+        p.circle(xx, -2.6, 0.32, fill="vermilion" if k % 2 else "emerald")
+        if k % 2 == 0:
+            p.poly([(xx - 0.3, -1.1), (xx, 0.6), (xx + 0.3, -1.1)], fill=metal)
     return fin(p, seed=1)
 
 
 def build_waist(s, b, ppu):
-    """Front pleats of the dhoti (patka) hanging between the legs — drawn over the legs."""
-    p = Pen((-10, -3, 10, 20), ppu)
+    """Long narrow striped front flap (patka) with a tassel, hanging over the dhoti between the legs."""
+    p = Pen((-6, -3, 6, 24), ppu)
     col, pat, pc = (s["dhoti"] + [None, None])[:3]
-    if s["lower"] in ("tiger",):
-        col, pat, pc = "#e0a040", "tiger", INK
-    if s["lower"] == "valkal":
-        col, pat, pc = "#9a6a3a", "vstripes", "#6a4422"
-    pleat = [(-2.6, -1.4), (2.8, -1.4), (3.6, 9.0), (1.8, 15.6), (0.2, 13.8), (-1.6, 15.8), (-3.0, 9.0)]
-    p.poly(pleat, fill=shade(col, 0.08), smooth=False)
-    for x in (-1.6, 0, 1.6):
-        p.line([(x * 0.6, 0), (x * 1.1, 13.4)], shade(col, -0.3), 0.18)
-    p.line([(-3.0, 9.0), (-1.6, 15.8), (0.2, 13.8), (1.8, 15.6), (3.6, 9.0)], s["metal"], 0.45)
+    metal = s["metal"]
+    stripes = [metal, "vermilion" if col not in ("vermilion", "#c63f28") else "#2f6a3a", metal]
+    w = 3.0
+    flap = [(-w / 2, -1.6), (w / 2, -1.6), (w / 2 + 0.3, 17.0), (0, 19.2), (-w / 2 - 0.3, 17.0)]
+    p.poly(flap, fill=stripes[0])
+    for k, c in enumerate(stripes):
+        x0 = -w / 2 + k * w / 3
+        p.poly([(x0 + 0.1, -1.2), (x0 + w / 3 - 0.1, -1.2), (x0 + w / 3 - 0.05 + (k - 1) * 0.1, 16.6), (x0 + 0.05 + (k - 1) * 0.1, 16.6)],
+               fill=c)
+    p.line([(-w / 2 - 0.3, 17.0), (0, 19.2), (w / 2 + 0.3, 17.0)], shade(metal, -0.35), 0.2)
+    p.line([(0, 19.2), (0, 21.0)], metal, 0.3)
+    p.poly([(-0.7, 21.0), (0, 23.2), (0.7, 21.0)], fill="vermilion")
     return fin(p, seed=2, inner=0.25, ow=0.45)
 
 
@@ -216,40 +251,49 @@ def _hand(p, y, skin, mode="grip", metal="gold", female=False):
 def build_upper_arm(s, b, ppu, armor=None):
     w0, w1 = b["ua"]
     L = 14.6 * b.get("arm_k", 1.0)
-    p = Pen((-5, -4, 5, L + 3), ppu)
+    p = Pen((-5, -4.5, 5, L + 3), ppu)
     skin = s["skin"]
-    p.circle(0, 0.3, w0 * 0.55, fill=skin)
-    p.poly(limb((0, 0), (0, L), w0, w1), fill=skin)
+    p.circle(0, 0.2, w0 * 0.62, fill=skin)                   # round shoulder cap (cut-out joint piece)
+    p.poly(limb((0, 0), (0, L), w0 * 0.98, w1), fill=skin)
+    p.line(arc_pts(0, 0.2, w0 * 0.62, w0 * 0.62, 200, 340, 10), body_line(skin), 0.16)
     if armor:
-        p.poly([(-w0 * 0.62, -1.2), (w0 * 0.62, -1.2), (w0 * 0.55, 3.6), (0, 4.6), (-w0 * 0.55, 3.6)], fill=armor,
+        p.poly([(-w0 * 0.66, -1.6), (w0 * 0.66, -1.6), (w0 * 0.58, 3.6), (0, 4.8), (-w0 * 0.58, 3.6)], fill=armor,
                smooth=True)
         p.pattern([(-w0 * 0.62, -1.2), (w0 * 0.62, -1.2), (w0 * 0.55, 3.6), (-w0 * 0.55, 3.6)], "scales",
                   shade(armor, -0.35), 1.2, 0.4)
     if s.get("female") and s.get("choli"):
-        p.poly([(-w0 * 0.56, -0.8), (w0 * 0.56, -0.8), (w0 * 0.5, 3.0), (-w0 * 0.5, 3.0)], fill=s["choli"])
-        p.line([(-w0 * 0.5, 3.0), (w0 * 0.5, 3.0)], s["metal"], 0.35)
-    # bajuband armlet
-    y = 5.2
-    p.poly(limb((-w0 * 0.52, y), (w0 * 0.52, y), 1.0, 1.0), fill=s["metal"])
-    p.poly([(-0.9, y - 0.4), (0, y - 2.2), (0.9, y - 0.4)], fill=s["metal"])
-    p.circle(0, y - 0.9, 0.36, fill="vermilion")
-    p.rivet(0, 0.3, 0.75)
+        p.poly([(-w0 * 0.6, -1.2), (w0 * 0.6, -1.2), (w0 * 0.52, 3.2), (-w0 * 0.52, 3.2)], fill=s["choli"])
+        p.line([(-w0 * 0.52, 3.2), (w0 * 0.52, 3.2)], s["metal"], 0.35)
+    y = 6.0                                                    # bajuband: double band + leaf ornament
+    for dy in (0, 1.1):
+        p.poly(limb((-w0 * 0.52, y + dy), (w0 * 0.5, y + dy), 0.7, 0.7), fill=s["metal"])
+    p.poly([(-0.9, y - 0.3), (0, y - 2.4), (0.9, y - 0.3)], fill=s["metal"])
+    p.circle(0, y - 0.9, 0.34, fill="vermilion")
+    p.rivet(0, 0.2, 0.78)
     return fin(p, seed=3)
 
 
 def build_forearm(s, b, ppu, mode="grip"):
     w0, w1 = b["fa"]
     L = 12.6 * b.get("arm_k", 1.0)
-    p = Pen((-4.4, -3, 4.4, L + 8.5), ppu)
+    p = Pen((-4.4, -3, 4.4, L + 2), ppu)
     skin = s["skin"]
-    p.circle(0, 0, w0 * 0.5, fill=skin)
-    p.poly(limb((0, 0), (0, L), w0, w1), fill=skin)
+    p.circle(0, 0, w0 * 0.52, fill=skin)
+    p.poly(limb((0, 0), (0, L), w0, w1 * 1.05), fill=skin)
     for k in range(3 if s.get("female") else 2):
-        p.poly(limb((-w1 * 0.58, L - 1.6 + k * 0.62), (w1 * 0.58, L - 1.6 + k * 0.62), 0.46, 0.46),
+        p.poly(limb((-w1 * 0.6, L - 2.0 + k * 0.62), (w1 * 0.6, L - 2.0 + k * 0.62), 0.46, 0.46),
                fill=s["metal"] if k % 2 == 0 else ("vermilion" if s.get("female") else shade(s["metal"], -0.2)))
-    _hand(p, L, skin, mode, s["metal"], s.get("female", False))
-    p.rivet(0, 0, 0.62)
+    p.rivet(0, 0, 0.64)
     return fin(p, seed=4)
+
+
+def build_hand(s, ppu, mode="grip"):
+    """Hand as its own cut-out piece pinned at the wrist (rivet) — reference puppets bend at the wrist."""
+    p = Pen((-3.6, -1.6, 3.8, 9.4), ppu)
+    skin = s["skin"]
+    _hand(p, 0.2, skin, mode, s["metal"], s.get("female", False))
+    p.rivet(0, 0.1, 0.5)
+    return fin(p, seed=14, ow=0.5)
 
 
 # =========================================================================== lower body
@@ -325,11 +369,32 @@ def build_shin(s, b, ppu, back=False):
     return fin(p, seed=7 + back)
 
 
+SEAT_DROP = {"stone": 5.6, "cushion": 2.4, "none": 0.0}
+
+
+def _seat(p, s, w, y):
+    """Red cushion (gold stripe) + dark stone pedestal under seated puppets (reference)."""
+    seat = s.get("seat", "stone")
+    if seat == "none":
+        return
+    cc = s.get("cushion_color", "#b8452c")
+    if seat == "stone":
+        p.poly([(-w - 1.6, y + 2.0), (w + 1.6, y + 2.0), (w + 1.2, y + 5.6), (-w - 1.2, y + 5.6)], fill="#3a302c")
+        p.line([(-w - 1.4, y + 2.6), (w + 1.4, y + 2.6)], "#5a4e46", 0.3)
+        p.pattern([(-w - 1.6, y + 2.0), (w + 1.6, y + 2.0), (w + 1.2, y + 5.6), (-w - 1.2, y + 5.6)], "speckle", "#4e4440",
+                  1.4, 0.3)
+    p.poly([(-w - 0.8, y - 0.6), (w + 0.8, y - 0.6), (w + 1.4, y + 1.0), (w + 0.6, y + 2.4), (-w - 0.6, y + 2.4),
+            (-w - 1.4, y + 1.0)], fill=cc, smooth=True)
+    p.line([(-w - 0.8, y + 0.9), (w + 0.8, y + 0.9)], "#e2bc5a", 0.45)
+    p.pattern([(-w, y - 0.4), (w, y - 0.4), (w, y + 2.2), (-w, y + 2.2)], "dots", shade(cc, 0.35), 1.4, 0.3)
+
+
 def build_lap(s, b, ppu):
-    """Seated padmasana lower body."""
-    p = Pen((-16, -4, 16, 12), ppu)
+    """Seated lower body: crossed legs (men) or legs folded to one side under the saree (women)."""
+    p = Pen((-17, -4, 17, 18), ppu)
+    female = s.get("female") or s["lower"] == "saree"
     col, pat, pc = (s["dhoti"] + [None, None])[:3]
-    if s.get("female") or s["lower"] == "saree":
+    if female:
         sr = s["saree"]
         col, pat, pc = sr[0], sr[1], shade(sr[0], 0.45)
     if s["lower"] == "tiger":
@@ -338,13 +403,28 @@ def build_lap(s, b, ppu):
         col, pat, pc = "#9a6a3a", "vstripes", "#6a4422"
     skin = s["skin"]
     w = 12.0 + b["belly"] * 0.4
+    _seat(p, s, w, 9.4)
+    if female:
+        lap = [(-w + 1.0, 0.4), (-w - 0.6, 5.0), (-w + 0.4, 9.6), (w + 1.6, 9.6), (w + 2.6, 7.4), (w - 1.0, 3.0),
+               (5.0, -1.6), (-5.0, -1.6)]
+        p.poly(lap, fill=col, smooth=True, n=8)
+        if pat:
+            p.pattern(lap, pat, pc, 1.6, 0.42, smooth=True)
+        border = sr[2] if len(sr) > 2 else "gold"
+        p.line([(-w + 0.4, 9.0), (w + 1.6, 9.0)], border, 0.7)
+        for k in range(5):
+            p.line([(2.0 + k * 1.6, 1.0), (3.4 + k * 2.2, 8.8)], shade(col, -0.3), 0.16)
+        f = [(w - 0.6, 6.6), (w + 3.6, 6.6), (w + 4.4, 8.2), (w + 3.4, 9.4), (w - 0.2, 9.4)]
+        p.poly(f, fill=skin, smooth=True)
+        p.line([(w + 0.2, 9.0), (w + 3.6, 9.0)], "#c4362a", 0.4)
+        p.poly(limb((w - 0.2, 7.4), (w - 0.2, 9.0), 0.9, 0.9), fill=s["metal"])
+        return fin(p, seed=6)
     lap = [(-w, 1.2), (-w - 1.2, 5.6), (-w + 1.4, 9.4), (w - 1.0, 9.4), (w + 1.4, 5.8), (w, 1.0), (5.0, -1.6),
            (-5.0, -1.6)]
     p.poly(lap, fill=col, smooth=True, n=8)
     if pat:
         p.pattern(lap, pat, pc, 1.6, 0.42, smooth=True)
     p.line([(-w + 1.0, 6.8), (-2.0, 4.4), (2.0, 4.4), (w - 0.6, 6.8)], shade(col, -0.3), 0.2, smooth=True)
-    # feet on top of thighs (soles up)
     for sx in (-1, 1):
         f = [(sx * 2.0, 2.6), (sx * 6.6, 1.2), (sx * 8.4, 2.4), (sx * 6.8, 4.0), (sx * 2.4, 4.4)]
         p.poly(f, fill=skin, smooth=True)
@@ -403,31 +483,45 @@ def build_fish_tail(s, b, ppu):
     body = [(-7.0, -3.6), (7.0, -3.6), (8.4, 10.0), (6.0, 26.0), (3.2, 36.0), (0.6, 36.0), (-3.6, 24.0), (-7.6, 10.0)]
     p.poly(body, fill=c, smooth=True)
     p.pattern(body, "scales", "gold", 1.6, 0.42, smooth=True)
-    fin = [(1.6, 34.0), (12.0, 40.0), (16.0, 47.0), (8.0, 44.0), (2.0, 48.0), (-3.0, 44.0), (0.4, 36.0)]
-    p.poly(fin, fill=shade(c, 0.15), smooth=True)
+    fin_pts = [(1.6, 34.0), (12.0, 40.0), (16.0, 47.0), (8.0, 44.0), (2.0, 48.0), (-3.0, 44.0), (0.4, 36.0)]
+    p.poly(fin_pts, fill=shade(c, 0.15), smooth=True)
     for k in range(5):
         p.line([(1.4, 36.0), (4.0 + k * 2.6, 46.0 - k * 0.6)], shade(c, -0.3), 0.18)
     return fin(p, seed=9)
 
 
 def build_tail(s, ppu):
-    p = Pen((-14, -32, 4, 4), ppu)
+    """Vanara tail built from small riveted segments, ending in a flame-like tuft (reference)."""
+    p = Pen((-15, -36, 6, 5), ppu)
     c = s.get("tail_color", s["skin"])
     path = catmull([(0, 0), (-4.8, -1.4), (-9.0, -7.0), (-8.6, -15.0), (-5.0, -20.6), (-1.6, -24.4), (-1.6, -28.0),
-                    (-4.2, -29.2)], False, 8)
+                    (-3.6, -29.8)], False, 4)
     n = len(path)
     for i in range(n - 1):
-        w = 2.6 * (1 - i / n) + 0.9
-        p.poly(limb(path[i], path[i + 1], w, w), fill=c)
-    for i in range(3, n - 2, 4):
+        w = 2.5 * (1 - i / n) + 1.0
+        p.poly(limb(path[i], path[i + 1], w, w * 0.94), fill=c if i % 2 == 0 else shade(c, 0.07), outline=INK, w=0.16)
         x, y = path[i]
-        x2, y2 = path[i + 1]
-        a = math.atan2(y2 - y, x2 - x)
-        w = 2.6 * (1 - i / n) + 0.9
-        p.line([(x - math.sin(a) * w / 2, y + math.cos(a) * w / 2), (x + math.sin(a) * w / 2, y - math.cos(a) * w / 2)],
-               shade(c, -0.35), 0.22)
+        p.circle(x, y, 0.32, fill="#efe2c0")
+    tx, ty = path[-1]
+    for k, ang in enumerate((-150, -110, -70)):
+        a_ = math.radians(ang)
+        p.poly([(tx - 0.6, ty), (tx + math.cos(a_) * 3.2, ty + math.sin(a_) * 3.2), (tx + 0.6, ty)], fill="vermilion",
+               smooth=True)
+    p.circle(tx, ty, 0.7, fill="gold")
     p.rivet(0, 0, 0.6)
     return fin(p, seed=10)
+
+
+def build_quiver(s, ppu):
+    """Red quiver with gold bands and fletched arrows, worn on the back."""
+    p = Pen((-4, -15, 4, 14), ppu)
+    p.poly(limb((0, 12), (0, -6), 3.2, 2.8), fill="#a8382a")
+    for y in (9.0, 2.0, -4.0):
+        p.poly(limb((-1.6, y), (1.6, y), 0.7, 0.7), fill="#e2bc5a")
+    for k, dx in enumerate((-0.9, 0.0, 0.9)):
+        p.line([(dx, -6), (dx * 1.3, -11.5)], "#c8a060", 0.24)
+        p.poly([(dx * 1.3, -11.5), (dx * 1.3 - 0.7, -13.8), (dx * 1.3 + 0.7, -13.8)], fill="#e8e0d0" if k % 2 else "vermilion")
+    return fin(p, seed=15, ow=0.45)
 
 
 def build_wing(s, ppu):
@@ -463,7 +557,7 @@ def build_halo(s, ppu):
 
 
 def build_head(s, ppu, scale=1.0):
-    p = Pen((-17, -44, 17, 14), ppu * scale)
+    p = Pen((-17, -46, 17, 30), ppu * scale)
     draw_head(p, s)
     return fin(p, seed=13)
 
@@ -502,16 +596,29 @@ def build_character(spec: dict, ppu: float = 9.0, use_cache=True) -> Rig:
     hs = dict(s)
     rig.add(Part("head", build_head(hs, ppu, head_scale), "torso", (0.8, -39.4), z=30))
     # extra heads (Ravana, Brahma, Kartikeya, Panchmukhi...)
-    for i, htype in enumerate(s.get("heads") or []):
-        side = 1 if i % 2 == 0 else -1
-        rank = i // 2 + 1
+    extra = list(s.get("heads") or [])
+    n = len(extra)
+    for i, htype in enumerate(extra):
         es = dict(hs)
-        es.update({"head": htype, "crown": s.get("extra_crown", s["crown"] if htype == "human" else "kirita_low")})
+        es.update({"head": htype, "crown": s.get("extra_crown", s["crown"] if htype == "human" else "kirita_low"),
+                   "plume": False})
         if htype != "human":
             es["skin"] = s.get("extra_skin", {}).get(htype, s["skin"]) if isinstance(s.get("extra_skin"), dict) else s["skin"]
-        k = 0.92 - 0.05 * rank
-        spr = build_head(es, ppu, k)
-        rig.add(Part(f"head_x{i}", spr, "torso", (0.8 + side * rank * 6.4, -39.0 - rank * 0.4), z=24 - rank))
+        if n >= 5:     # Ravana / Vishwaroop: a fanned arc of heads around the main head
+            k = 0.58
+            span = 128 if n >= 8 else 100
+            ang = math.radians(-span + 2 * span * i / max(1, n - 1))
+            R = 17.0
+            cx, cy = 0.8 + R * math.sin(ang), -46.0 - R * 0.95 * math.cos(ang)
+            joint = (cx, cy + 8.0 * k)
+            z = 20 - abs(i - (n - 1) / 2)
+        else:          # 2-4 heads: side by side
+            side = 1 if i % 2 == 0 else -1
+            rank = i // 2 + 1
+            k = 0.92 - 0.05 * rank
+            joint = (0.8 + side * rank * 6.4, -39.0 - rank * 0.4)
+            z = 24 - rank
+        rig.add(Part(f"head_x{i}", build_head(es, ppu, k), "torso", joint, z=z))
     # arms
     items = s.get("items") or {}
     armor = s.get("armor")
@@ -521,11 +628,12 @@ def build_character(spec: dict, ppu: float = 9.0, use_cache=True) -> Rig:
         rig.add(Part(f"ua_{side}", build_upper_arm(s, b, ppu, armor), "torso",
                      (sx * (b["sw"] - 1.5), -36.4), z=zu, rest=-14 * sx))
         rig.add(Part(f"fa_{side}", build_forearm(s, b, ppu, mode), f"ua_{side}", (0, 14.6), z=zf))
+        rig.add(Part(f"hd_{side}", build_hand(s, ppu, mode), f"fa_{side}", (0, 12.6), z=zf + 2))
         if it and it in ITEMS:
             spr, world, off = build_item(it, ppu)
-            rig.add(Part(f"it_{side}", spr, f"fa_{side}", (off[0], 12.6 + 2.0 + off[1]), z=zf - 1 if it not in (
-                "dhal", "shield", "chakra", "sudarshan", "shankh", "padma", "kalash", "modak", "diya") else zf + 1,
-                         rest=ITEM_REST.get(it, 0.0), world=world))
+            front_items = ("dhal", "shield", "chakra", "sudarshan", "shankh", "padma", "kalash", "modak", "diya")
+            rig.add(Part(f"it_{side}", spr, f"hd_{side}", (off[0], 2.0 + off[1]),
+                         z=zf + 1 if it not in front_items else zf + 3, rest=ITEM_REST.get(it, 0.0), world=world))
     # rest pose for the two main arms
     rig.parts["ua_b"].rest = 22
     rig.parts["fa_b"].rest = -108 if not items.get("b") else -60
@@ -548,9 +656,10 @@ def build_character(spec: dict, ppu: float = 9.0, use_cache=True) -> Rig:
                      (sx * (b["sw"] - 2.2), -35.6 + rank * 1.2), z=2 - rank, rest=ua_rest))
         rig.add(Part(f"fa_{name}", build_forearm(s, b, ppu * 0.98, mode), f"ua_{name}", (0, 14.3), z=3 - rank,
                      rest=fa_rest))
+        rig.add(Part(f"hd_{name}", build_hand(s, ppu * 0.98, mode), f"fa_{name}", (0, 12.4), z=4 - rank))
         if it and it in ITEMS:
             spr, world, off = build_item(it, ppu * 0.98)
-            rig.add(Part(f"it_{name}", spr, f"fa_{name}", (0, 14.4), z=3 - rank, world=world,
+            rig.add(Part(f"it_{name}", spr, f"hd_{name}", (0, 2.0), z=3 - rank, world=world,
                          rest=ITEM_REST.get(it, 0.0)))
     # lower body
     lower = s["lower"]
@@ -590,8 +699,11 @@ def build_character(spec: dict, ppu: float = 9.0, use_cache=True) -> Rig:
     if s.get("halo"):
         rig.add(Part("halo", build_halo(s, ppu), "torso", (0.6, -48.0), z=-10, world=0.0))
     # string anchors (head top, both hands)
+    if "bow" in (items.get("f"), items.get("b")) or s.get("quiver"):
+        rig.add(Part("quiver", build_quiver(s, ppu), "torso", (-b["sw"] + 3.4, -28.0), z=3, rest=28))
+    rig.meta["ground_seated"] = 9.4 + SEAT_DROP.get(s.get("seat", "stone"), 5.6)
     rig.anchors = {"head": ("head", (-0.3, -26.0 if s["crown"] in ("kirita", "kirita_tall") else -16.0)),
-                   "hand_f": ("fa_f", (0, 14.0)), "hand_b": ("fa_b", (0, 14.0))}
+                   "hand_f": ("hd_f", (0, 1.6)), "hand_b": ("hd_b", (0, 1.6))}
     sc = b["s"] * float(s.get("scale", 1.0))
     rig.meta["scale"] = sc
     rig.extent = (-48, -84, 48, 56)

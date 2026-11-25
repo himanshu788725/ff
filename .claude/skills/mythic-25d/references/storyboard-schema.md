@@ -150,7 +150,9 @@ almond|round · `fangs` · `angry` · `lower` dhoti|saree|tiger|valkal|armor|loi
 leopard waves speckle) · `saree` [colour, pattern, border] · `choli` · `sash` · `armor` (colour) · `janeu` ·
 `necklace` · `pearls` · `rudraksha` · `snake` · `mundamala` · `metal` · `items` {f: front-hand item, b: back-hand
 item} · `arms` 2|4|6|8|10 · `extra_items` [...] · `heads` [extra head types] · `tail` · `wings` (+wing_color) ·
-`halo` (+halo_color) · `hoods` · `tail_color` · `scale`.
+`halo` (+halo_color) · `hoods` · `tail_color` · `scale` · `crown_color` · `plume` (false = no flame plume) ·
+`plume_color` · `tiers` (crown rings) · `straps` (crossed chest straps) · `strap_color` · `beads` · `quiver`
+(auto with a bow) · `seat` stone|cushion|none (for `pose: seated`) · `cushion_color`.
 
 Items: gada bow arrow trishul chakra sudarshan shankh padma damru khadga/sword dhal/shield vajra kamandalu mala
 pothi bansuri veena pasha ankusha parashu hala danda shakti/spear dhwaja/flag chhatra diya kalash modak flower

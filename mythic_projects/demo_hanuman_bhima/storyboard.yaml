@@ -25,8 +25,6 @@ shots:
     narration: "द्वापर युग की बात है। गंधमादन पर्वत के कदली वन में, पवनपुत्र हनुमान राम-नाम का ध्यान कर रहे थे।"
     cast:
       - {who: hanuman, x: 0.5, pose: meditate}
-    props:
-      - {name: cushion, x: 0.5, layer: ground, s: 1.4, color: vermilion}
     fx: [dust]
 
   - id: s2_bhima_aata_hai

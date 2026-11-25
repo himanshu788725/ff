@@ -193,7 +193,7 @@ def _pose_sheet(ids, out, W=None, poses=None, label=True):
     for who in ids:
         for pname, acts in poses:
             plan = {"W": 400, "H": 400, "fps": 24, "shots": [{"id": "x", "env": "plain_day", "dur": 3, "grade": "kathaa",
-                                                              "camera": {"move": "static", "from": 1.0, "to": 1.0, "y": [0.4, 0.4]},
+                                                              "camera": {"move": "static", "from": 1.0, "to": 1.0, "y": [0.36, 0.36]},
                                                               "cast": [{"who": who, "x": 0.5, "actions": acts, "strings": False,
                                                                         "scale": 1.35}],
                                                               "fx": ["no_particles"], "light": {"vignette": 0.35, "rays": 0}}]}
@@ -226,9 +226,9 @@ def cmd_gallery(a):
     tiles = []
     for e in es:
         kind = e.get("kind", "humanoid")
-        sc = {"humanoid": 1.45, "quadruped": 0.85, "bird": 1.1}.get(kind, 1.0)
+        sc = {"humanoid": 1.12, "quadruped": 0.85, "bird": 1.1}.get(kind, 1.0)
         plan = {"W": 320, "H": 320, "fps": 24, "shots": [{"id": "x", "env": "plain_day", "dur": 3, "grade": "kathaa",
-                                                          "camera": {"move": "static", "from": 1.0, "to": 1.0, "y": [0.4, 0.4]},
+                                                          "camera": {"move": "static", "from": 1.0, "to": 1.0, "y": [0.36, 0.36]},
                                                           "cast": [{"who": e["id"], "x": 0.5, "strings": False, "scale": sc}],
                                                           "fx": ["no_particles"], "light": {"vignette": 0.35, "rays": 0}}]}
         try:
